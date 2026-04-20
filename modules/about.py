@@ -78,23 +78,14 @@ class AboutWindow(Toplevel):
         ).grid(column=2, row=6, sticky=W)
         self.about_note.add(self.main_frm, text="About Youtube-dl GUI")
 
-        ffmpeg_frm = ttk.Frame(self)
-        ffmpeg_lic_txt = Text(ffmpeg_frm)
-        with open(relative_path("ffmpeg-20200115-0dc0837-win64-static\\LICENSE.txt"), "r", encoding="utf-8") as f:
-            ffmpeg_lic_txt.insert(INSERT, "".join(f.readlines()))
-            f.close()
-        ffmpeg_lic_txt.config(state=DISABLED)
-        ffmpeg_lic_y = ttk.Scrollbar(ffmpeg_frm, command=ffmpeg_lic_txt.yview)
-        ffmpeg_lic_y.pack(side=RIGHT, fill=Y, expand=True)
-        ffmpeg_lic_txt.config(yscrollcommand=ffmpeg_lic_y.set)
-        ffmpeg_lic_txt.pack(side=LEFT, fill=BOTH, expand=True)
-        self.about_note.add(ffmpeg_frm, text="FFMPEG License")
+        # ffmpeg is shipped via imageio_ffmpeg; the standalone LICENSE.txt folder is no
+        # longer bundled. A tab is intentionally omitted until a replacement license path
+        # is wired up.
 
         atomic_frm = ttk.Frame(self)
         at_lic_txt = Text(atomic_frm)
         with open(relative_path("AtomicParsleyWindows\\COPYING.txt"), "r", encoding="utf-8") as f:
             at_lic_txt.insert(INSERT, "".join(f.readlines()))
-            f.close()
         at_lic_txt.config(state=DISABLED)
         at_lic_y = ttk.Scrollbar(atomic_frm, command=at_lic_txt.yview)
         at_lic_y.pack(side=RIGHT, fill=Y, expand=True)
@@ -106,10 +97,9 @@ class AboutWindow(Toplevel):
         aw_lic_txt = Text(awtheme_frm)
         with open(relative_path("awthemes-10.3.0\\LICENSE"), "r", encoding="utf-8") as f:
             aw_lic_txt.insert(INSERT, "".join(f.readlines()))
-            f.close()
         aw_lic_txt.config(state=DISABLED)
         aw_lic_y = ttk.Scrollbar(awtheme_frm, command=aw_lic_txt.yview)
         aw_lic_y.pack(side=RIGHT, fill=Y, expand=True)
-        aw_lic_txt.config(yscrollcommand=at_lic_y.set)
+        aw_lic_txt.config(yscrollcommand=aw_lic_y.set)
         aw_lic_txt.pack(side=LEFT, fill=BOTH, expand=True)
         self.about_note.add(awtheme_frm, text="Awthemes License")
