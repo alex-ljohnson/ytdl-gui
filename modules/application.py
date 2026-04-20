@@ -490,8 +490,11 @@ class Application(ThemedTk):
             link("mailto:16JohnA28@gmail.com")
             log_debug("Email report.")
 
-    def font(self):
-        FontWm(my_font=self.curr_font)
+    def font(self, event=None):
+        fw = FontWm(my_font=self.curr_font)
+        fw.transient(self)
+        fw.grab_set()
+        self.wait_window(fw)
         self.font_to_list()
 
     def on_closing(self, event=None):
