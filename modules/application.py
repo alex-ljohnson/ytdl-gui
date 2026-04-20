@@ -369,8 +369,8 @@ class Application(ThemedTk):
             self.title(f"Youtube-dl GUI - {path}")
             self.main_text.insert("1.0", "".join(lines_in))
             self.main_text.edit_reset()
-            self.saved = False
-            self.title(f"*{self.title()}*")
+            self.main_text.edit_modified(False)
+            self.saved = True
 
     def curr_dir(self):
         messagebox.showinfo(
