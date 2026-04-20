@@ -24,6 +24,15 @@ class _FakePlatform(PlatformExtension):
         return list(self._expansion)
 
 
+@pytest.fixture(autouse=True)
+def _reset_extension_manager():
+    original = ExtensionManager.instance
+    try:
+        yield
+    finally:
+        ExtensionManager.instance = original
+
+
 @pytest.fixture
 def downloader():
     master = MagicMock()

@@ -349,10 +349,10 @@ class Downloader:
                 parent=self.download_window,  # type: ignore
             )
 
-    def apply_extensions(self, lines) -> list[str] | None:
+    def apply_extensions(self, lines: list[str]) -> list[str] | None:
         if ExtensionManager.instance is None:
-            print("Extension manager not initialised, skipping extension checks")
-            return list(lines)
+            log_debug("Extension manager not initialised, skipping extension checks")
+            return [i for i in lines if (s := i.strip()) and not s.startswith("#")]
         platform_extensions = [
             e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
         ]
