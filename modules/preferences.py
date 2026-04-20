@@ -1,4 +1,5 @@
 """Preferences window class"""
+import copy
 from tkinter import BooleanVar, Misc, StringVar, Toplevel, messagebox, ttk
 from tkinter.constants import BOTH, BOTTOM, FLAT, NW, TOP
 from typing import TYPE_CHECKING
@@ -127,7 +128,7 @@ class PreferenceWindow(Toplevel):
         self.master.write_config()
 
     def reset_prefs(self, arg=None):
-        self.master.app_config["prefs"] = DEFAULT_CONFIG["prefs"]
+        self.master.app_config["prefs"] = copy.deepcopy(DEFAULT_CONFIG["prefs"])
         self.parallel.set(self.master.app_config["prefs"]["parallel"])
         self.theme.set(self.master.app_config["prefs"]["theme"])
         self.log.set(self.master.app_config["prefs"]["print_log"])

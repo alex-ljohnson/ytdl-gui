@@ -5,6 +5,7 @@ This also implements some additional features on top of what youtube-dl provides
 """
 
 import argparse
+import copy
 import json
 import os
 import sys
@@ -240,34 +241,29 @@ class Application(ThemedTk):
                 log_debug("[Update Check] No updates")
 
     def load_config(self):
-        # Create data path
         if not os.path.exists(DATA_PATH):
             log_debug("Creating '%appdata/Youtube-dl_GUI' folder")
             os.mkdir(DATA_PATH)
-        # Create config
         if not os.path.exists(APP_CONFIG_JSON):
             open(APP_CONFIG_JSON, "x", encoding="utf-8").close()
             log_debug("Creating 'appConfig.json'")
-        # Read config
         with open(APP_CONFIG_JSON, "r", encoding="utf-8") as f:
             try:
                 self.app_config = json.load(f)
             except json.decoder.JSONDecodeError:
                 print("Error in config. Setting default config...")
                 self.app_config = {}
-            f.close()
-        # Check all items present
-        for k, v in DEFAULT_CONFIG.items():
-            if self.app_config.get(k, None) is None:
-                self.app_config[k] = v
-            if isinstance(v, dict):
-                for k2, v2 in v.items():
-                    if dict(self.app_config.get(k, None)).get(k2, None) is None:
-                        self.app_config[k][k2] = v2
-        # Load default
-        if self.app_config == {}:
-            self.app_config = DEFAULT_CONFIG
+        if not self.app_config:
+            self.app_config = copy.deepcopy(DEFAULT_CONFIG)
             self.write_config()
+            return
+        for k, v in DEFAULT_CONFIG.items():
+            if self.app_config.get(k) is None:
+                self.app_config[k] = copy.deepcopy(v)
+            elif isinstance(v, dict):
+                for k2, v2 in v.items():
+                    if self.app_config[k].get(k2) is None:
+                        self.app_config[k][k2] = copy.deepcopy(v2)
 
     def write_config(self):
         log_debug("[App Config] Written config", True)
