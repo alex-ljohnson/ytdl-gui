@@ -350,33 +350,41 @@ class Downloader:
             )
 
     def apply_extensions(self, lines) -> list[str] | None:
-        items = []
+        if ExtensionManager.instance is None:
+            print("Extension manager not initialised, skipping extension checks")
+            return list(lines)
+        platform_extensions = [
+            e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
+        ]
+        items: list[str] = []
         for i in lines:
             extension_found = False
-            if ExtensionManager.instance is None:
-                print("Extension manager not initialised, skipping extension checks")
-                return lines
-            platform_extensions = [
-                e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
-            ]
             for extension in platform_extensions:
-                if extension.check_type(i):
-                    if not extension.ready:
-                        ans = messagebox.askyesnocancel(
-                            f"{extension.get_name()} not enabled",
-                            f"{extension.get_name()} support is an optional extra.\nTo enable it either go to Tools > Manage extensions...\nOr click 'Yes' to enable it now.\nClick no to continue without enabling the extension.",
-                            parent=self.download_window,  # type: ignore
-                        )
-                        if ans is None:
-                            return None
-                        if ans:
-                            extension.enable()
-                    if extension.ready:
-                        items.extend(extension.get_items(i))
-                    extension_found = True
-                    break
-            if not extension_found and not i.strip() == "" and not i.strip().startswith("#"):
+                if not extension.check_type(i):
+                    continue
+                if not extension.ready:
+                    ans = messagebox.askyesnocancel(
+                        f"{extension.get_name()} not enabled",
+                        f"{extension.get_name()} support is an optional extra.\n"
+                        "To enable it either go to Tools > Manage extensions...\n"
+                        "Or click 'Yes' to enable it now.\n"
+                        "Click no to continue without enabling the extension.",
+                        parent=self.download_window,  # type: ignore
+                    )
+                    if ans is None:
+                        return None
+                    if ans:
+                        extension.enable()
+                if extension.ready:
+                    expanded = extension.get_items(i)
+                    if expanded:
+                        items.extend(expanded)
+                extension_found = True
+                break
+            stripped = i.strip()
+            if not extension_found and stripped and not stripped.startswith("#"):
                 items.append(i)
+        return items
 
 
 class DownloadWindow(OutputWindow):
