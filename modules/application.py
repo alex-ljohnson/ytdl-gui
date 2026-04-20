@@ -279,11 +279,10 @@ class Application(ThemedTk):
         self.f.close()
         self.f = None
 
-    def save(self, event=None):
+    def save(self, event=None) -> bool:
         if self.f is None:
-            self.save_as()
             log_debug("Save as from save")
-            return
+            return self.save_as()
         self.saved = True
         self.title(self.title().replace("*", ""))
         log_debug("[Data] Save")
@@ -293,8 +292,9 @@ class Application(ThemedTk):
         self.f.write(s)
         self.f.flush()
         os.fsync(self.f)
+        return True
 
-    def save_as(self, event=None):
+    def save_as(self, event=None) -> bool:
         path = filedialog.asksaveasfilename(
             confirmoverwrite=True,
             defaultextension=".ytdl",
@@ -305,15 +305,15 @@ class Application(ThemedTk):
             title="Save As...",
             parent=self,
         )
-        if path:
-            log_debug("Save as")
-            if self.f is not None:
-                self.f.close()
-            self.f = open(path, "r+", encoding="utf-8")
-            self.title(f"Youtube-dl GUI - {path}")
-            self.save()
-        else:
+        if not path:
             log_debug("Save as cancelled")
+            return False
+        log_debug("Save as")
+        if self.f is not None:
+            self.f.close()
+        self.f = open(path, "r+", encoding="utf-8")
+        self.title(f"Youtube-dl GUI - {path}")
+        return self.save()
 
     def ask_save(self):
         """Ask user if they want to save.
@@ -500,13 +500,10 @@ class Application(ThemedTk):
             sv = messagebox.askyesnocancel("Save Changes?", "Do you want to save your changes?", parent=self)
             if sv is None:
                 return
-            if sv:
-                self.save()
-            self.destroy()
-            sys.exit(0)
-        else:
-            self.destroy()
-            sys.exit(0)
+            if sv and not self.save():
+                return  # user cancelled the save-as dialog
+        self.destroy()
+        sys.exit(0)
 
     def modified(self, event=None):
         if self.saved:
