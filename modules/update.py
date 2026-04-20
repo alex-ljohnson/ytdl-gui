@@ -110,7 +110,9 @@ class Updater:
             try:
                 response.raise_for_status()
             except requests.HTTPError as e:
-                messagebox.showerror("HTTP Error occurred", str(e), parent=self.master)
+                self.master.after(0, lambda err=str(e): messagebox.showerror(
+                    "HTTP Error occurred", err, parent=self.master
+                ))
                 return None
 
             tmp_dir = os.environ.get("TEMP") or os.environ.get("TMP") or os.path.expandvars("%tmp%")
@@ -135,20 +137,22 @@ class Updater:
                         f.write(data)
                         if self.open_window is None:
                             continue
+                        win = self.open_window
                         if length:
                             pct = downloaded / length
-                            self.open_window.after(
-                                0,
-                                lambda p=pct: (
-                                    self.open_window.progress.configure(value=p),
-                                    self.open_window.progress_text.set(f"Downloaded: {round(p * 100, 1)}%"),
-                                ),
-                            )
+
+                            def _update_progress(p=pct, w=win):
+                                if w is not None and w.winfo_exists():
+                                    w.progress.configure(value=p)
+                                    w.progress_text.set(f"Downloaded: {round(p * 100, 1)}%")
+
+                            win.after(0, _update_progress)
                         else:
-                            self.open_window.after(
-                                0,
-                                lambda d=downloaded: self.open_window.progress_text.set(f"Downloaded: {d} bytes"),
-                            )
+                            def _update_bytes(d=downloaded, w=win):
+                                if w is not None and w.winfo_exists():
+                                    w.progress_text.set(f"Downloaded: {d} bytes")
+
+                            win.after(0, _update_bytes)
             except (TclError, AttributeError):
                 return None
         return filename
