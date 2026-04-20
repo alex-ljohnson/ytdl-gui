@@ -220,7 +220,8 @@ class Downloader:
                 return
             status = d.get("status")
             if status == "downloading":
-                total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+                total_bytes = d.get("total_bytes")
+                total = total_bytes if total_bytes is not None else (d.get("total_bytes_estimate") or 0)
                 downloaded = d.get("downloaded_bytes", 0)
                 pct_str = d.get("_percent_str")
                 stat_str = d.get("_default_template")
