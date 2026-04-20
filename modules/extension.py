@@ -60,16 +60,20 @@ class ExtensionManager:
 
     instance = None
 
-    def __init__(self, master) -> None:
-        self.master: Application = master
-        self.extensions = {}
-        self.load_extensions()
-
     def __new__(cls, *args):
         if cls.instance is None:
             log_debug("Creating extension singleton")
             cls.instance = super(ExtensionManager, cls).__new__(cls)
+            cls.instance._initialised = False
         return cls.instance
+
+    def __init__(self, master) -> None:
+        if getattr(self, "_initialised", False):
+            return
+        self.master: "Application" = master
+        self.extensions = {}
+        self.load_extensions()
+        self._initialised = True
 
     def iter_namespace(self, ns_pkg: ModuleType):
         return pkgutil.walk_packages(ns_pkg.__path__, ns_pkg.__name__ + ".")
