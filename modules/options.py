@@ -113,8 +113,8 @@ class OptionsWindow(Toplevel):
 
         self.output = StringVar(self, value=self.master.app_config["opts"]["output_template"])
         output_frm = ttk.Frame(advanced_frm)
-        output_lbl = ttk.Label(format_frm, text="Output template (empty=default): ")
-        output_box = ttk.Entry(format_frm, textvariable=self.format_string)
+        output_lbl = ttk.Label(output_frm, text="Output template (empty=default): ")
+        output_box = ttk.Entry(output_frm, textvariable=self.output)
         self.output.set(self.master.app_config["opts"]["output_template"])
 
         save_btn = ttk.Button(advanced_frm, command=self.update_opts, text="Save options")
@@ -122,8 +122,8 @@ class OptionsWindow(Toplevel):
         format_lbl.grid(row=0, column=0)
         format_box.grid(row=0, column=1, columnspan=2)
         output_frm.grid(row=1, column=0, sticky=NW, columnspan=3)
-        output_lbl.grid(row=1, column=0)
-        output_box.grid(row=1, column=1, columnspan=2)
+        output_lbl.grid(row=0, column=0)
+        output_box.grid(row=0, column=1, columnspan=2)
         ttk.Label(
             advanced_frm,
             text="WARNING: Altering these options may affect the operation of other options and preferences!",
