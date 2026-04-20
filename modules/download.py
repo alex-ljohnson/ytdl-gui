@@ -216,32 +216,42 @@ class Downloader:
 
     def download(self, lines, parallel: bool, print_log: bool):
         def progress_hook(d: dict):
-            def inner_hook(d: dict):
-                if self.download_window is None:
-                    return
-                if d["status"] == "downloading":
-                    try:
-                        if d.get("total_bytes", None) is not None:
-                            self.download_window.progress["value"] = d["downloaded_bytes"] / d["total_bytes"]
-                        elif d["total_bytes_estimate"] != 0:
-                            self.download_window.progress["value"] = d["downloaded_bytes"] / d["total_bytes_estimate"]
-                    except (KeyError, ZeroDivisionError):
-                        pass
-                    else:
-                        self.download_window.percent.set(d["_percent_str"])
-                    self.download_window.stat_string.set(str(d["_default_template"]))
-                elif d["status"] == "finished":
-                    try:
-                        print(f"Finished downloading {d['_total_bytes_str']} in {d['elapsed']} seconds\n")
-                    except KeyError:
-                        print("Download finished\n")
-                    finally:
-                        self.download_window.progress["value"] = 0
-                        self.download_window.percent.set("Download Complete! - Finishing up")
-                        tot = d["_total_bytes_str"]
-                        self.download_window.stat_string.set(f"{tot}/{tot} @ 0MiB/s")
+            if self.download_window is None:
+                return
+            status = d.get("status")
+            if status == "downloading":
+                total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+                downloaded = d.get("downloaded_bytes", 0)
+                pct_str = d.get("_percent_str")
+                stat_str = d.get("_default_template")
 
-            threading.Thread(target=inner_hook, args=[d]).start()
+                def apply_downloading():
+                    if self.download_window is None:
+                        return
+                    if total:
+                        self.download_window.progress["value"] = downloaded / total
+                    if pct_str is not None:
+                        self.download_window.percent.set(pct_str)
+                    if stat_str is not None:
+                        self.download_window.stat_string.set(str(stat_str))
+
+                self.download_window.after(0, apply_downloading)
+            elif status == "finished":
+                total_str = d.get("_total_bytes_str", "unknown")
+                elapsed = d.get("elapsed")
+                if elapsed is not None:
+                    print(f"Finished downloading {total_str} in {elapsed} seconds\n")
+                else:
+                    print("Download finished\n")
+
+                def apply_finished():
+                    if self.download_window is None:
+                        return
+                    self.download_window.progress["value"] = 0
+                    self.download_window.percent.set("Download Complete! - Finishing up")
+                    self.download_window.stat_string.set(f"{total_str}/{total_str} @ 0MiB/s")
+
+                self.download_window.after(0, apply_finished)
 
         archive_path = relative_data("archive.txt")
         if not os.path.exists(archive_path):
