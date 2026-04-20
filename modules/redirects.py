@@ -44,14 +44,14 @@ class StderrRedirect(_RedirectBase):
 
     def write(self, s: str):
         try:
-            self.old_stderr.write(s)
-        except Exception:  # pylint: disable=W0718
-            pass
-        try:
             self._write_to_widget(s)
         except (TclError, RuntimeError) as e:
             if "main thread is not in main loop" in str(e):
                 return
+            try:
+                self.old_stderr.write(s)
+            except Exception:  # pylint: disable=W0718
+                pass
             if self.open:
                 self.close()
 
