@@ -161,7 +161,7 @@ class Downloader:
 
             if best_video is None:
                 print("No supported video format found")
-                yield
+                return
 
             if best_video is not None:
                 if not has_audio and video_ext != "best":
