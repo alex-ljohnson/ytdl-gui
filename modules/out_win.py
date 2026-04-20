@@ -72,10 +72,11 @@ class OutputWindow(Toplevel):
                 parent=self,
             )
             return
-        #     messagebox.showwarning("Download not stopped...", "Download logs continue in the console.", parent=self)
         self.grab_release()
-        self.out_redir.close()
-        self.err_redir.close()
+        for attr in ("out_redir", "err_redir"):
+            redir = getattr(self, attr, None)
+            if redir is not None:
+                redir.close()
         self.master.focus_set()
         self.destroy()
         log_debug("[Outwin] Closed")
