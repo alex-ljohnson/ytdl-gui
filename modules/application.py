@@ -532,8 +532,8 @@ class Application(ThemedTk):
         self.write_config()
 
 
-APP_VERSION = "2024.01.23.f1"
-notes = f"""Youtube-dl GUI v{APP_VERSION}
+APP_VERSION = "2026.04.21.f1"
+NOTES = f"""Youtube-dl GUI v{APP_VERSION}
 Changes:
  - Thumbnail downloaded even if format doesn't support embedding
 Fixes:
@@ -547,7 +547,7 @@ Fixes:
 def main(args: argparse.Namespace):
     """Entry point for the program"""
     if args.notes:
-        print(notes)
+        print(NOTES)
         sys.exit(0)
     if args.path is None:
         path = None
