@@ -123,6 +123,12 @@ def _bundled_quickjs() -> str | None:
 
 
 def find_js_runtime() -> str | None:
+    """Return the JS runtime specifier for yt-dlp, or None if not found.
+
+    Checks system PATH in priority order (deno → bun → node → qjs),
+    then falls back to the bundled QuickJS build. Returns ``"quickjs:/path"``
+    for the bundled case so yt-dlp can locate the executable.
+    """
     for name in ("deno", "bun", "node", "qjs"):
         if shutil.which(name):
             log_debug(f"[JSRuntime] Using system {name}")

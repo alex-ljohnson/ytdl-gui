@@ -55,12 +55,10 @@ class TestFindJsRuntime:
 
     def test_falls_back_to_bundled_qjs(self, monkeypatch):
         monkeypatch.setattr("modules.utils.shutil.which", lambda name: None)
-        monkeypatch.setattr("modules.utils.relative_path", lambda p, **kw: r"C:\app\quickjs\qjs.exe")
+        monkeypatch.setattr("modules.utils._bundled_quickjs", lambda: r"C:\app\quickjs\qjs.exe")
         assert find_js_runtime() == r"quickjs:C:\app\quickjs\qjs.exe"
 
     def test_returns_none_when_nothing_found(self, monkeypatch):
         monkeypatch.setattr("modules.utils.shutil.which", lambda name: None)
-        def _raise(p, **kw):
-            raise FileNotFoundError
-        monkeypatch.setattr("modules.utils.relative_path", _raise)
+        monkeypatch.setattr("modules.utils._bundled_quickjs", lambda: None)
         assert find_js_runtime() is None
