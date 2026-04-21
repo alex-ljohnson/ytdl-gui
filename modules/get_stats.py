@@ -35,31 +35,33 @@ class GetStats():
             self.__dots__ += 1
             print(f"\rProcessing  {stages[self.__dots__%4]}", end="")
                 
-    def get_length(self, filename, video=True):
+    def get_length(self, filename) -> float | None:
         if not os.path.exists(filename):
             return None
-        from moviepy.editor import AudioFileClip, VideoFileClip
+        import json, subprocess
+        from modules.utils import find_ffprobe
+        ffprobe = find_ffprobe()
+        if ffprobe is None:
+            print(f"ffprobe not found; cannot read duration of {filename}")
+            return None
         try:
-            if video:
-                with VideoFileClip(filename) as clip:
-                    return clip.duration
-            with AudioFileClip(filename) as clip:
-                return clip.duration
-        except Exception as ex:  # pylint: disable=W0718
+            result = subprocess.run(
+                [ffprobe, "-v", "error", "-show_entries", "format=duration",
+                 "-of", "json", filename],
+                capture_output=True, text=True, check=True,
+            )
+            return float(json.loads(result.stdout)["format"]["duration"])
+        except Exception as ex:
             print(f"Could not read duration of {filename}: {ex}")
             return None
 
     def file_time(self, i):
         if i.count(".temp") != 0:
             return
-        isvideo = None
-        if i.endswith((".mp4", ".mov", ".mkv", ".webm", ".avi", ".mpeg")):
-            isvideo = True
-        elif i.endswith((".mp3", ".opus", ".m4a", ".aac", ".wav")):
-            isvideo = False
-        else:
+        if not i.endswith((".mp4", ".mov", ".mkv", ".webm", ".avi", ".mpeg",
+                            ".mp3", ".opus", ".m4a", ".aac", ".wav")):
             return
-        t = self.get_length(os.path.join(self.pathname, i), isvideo)
+        t = self.get_length(os.path.join(self.pathname, i))
         if t is None:
             return
         iname = str(i).strip().strip("\r\n")
