@@ -295,7 +295,7 @@ class Application(ThemedTk):
         self.f.seek(0)
         self.f.write(s)
         self.f.flush()
-        os.fsync(self.f)
+        os.fsync(self.f.fileno())
         return True
 
     def save_as(self, event=None) -> bool:
@@ -332,7 +332,8 @@ class Application(ThemedTk):
             log_debug("Asking save")
             sv = messagebox.askyesnocancel("Save Changes?", "Do you want to save your changes?", parent=self)
             if sv:
-                self.save()
+                if not self.save():
+                    return None
             return sv
         else:
             log_debug("Already saved.")
