@@ -55,8 +55,8 @@ class Application(ThemedTk):
 
         super().__init__(
             theme=self.app_config["prefs"]["theme"],
-            toplevel=BACKGROUNDS[self.app_config["prefs"]["theme"]],
-            themebg=BACKGROUNDS[self.app_config["prefs"]["theme"]],
+            toplevel=BACKGROUNDS[self.app_config["prefs"]["theme"]],  # type: ignore
+            themebg=BACKGROUNDS[self.app_config["prefs"]["theme"]],  # type: ignore
         )
 
         self.running = False
@@ -169,11 +169,9 @@ class Application(ThemedTk):
             lines_in = self.f.readlines()
             log_debug(f"[File IO] Read {lines_in} from {self.f.name}")
         except UnicodeDecodeError:
-            lines_in = ""
+            lines_in = [""]
             messagebox.showerror("Bad encoding", "The encoding of the file isn't supported", parent=self)
         if len(lines_in) > 0:
-            if isinstance(lines_in[0], bytes):
-                lines_in = [i.decode() for i in lines_in]
             if lines_in[-1][-1:] == "\n":
                 lines_in[-1] = lines_in[-1][:-1]
             for i in lines_in:
@@ -232,7 +230,7 @@ class Application(ThemedTk):
         self.bind_all("<Control-s>", self.save)
         self.bind_all("<Control-Shift-S>", self.save_as)
         self.bind_all("<Control-o>", self.open)
-        self.main_text.bind("<Control-Shift-Z>", self.main_text.edit_redo)
+        self.main_text.bind("<Control-Shift-Z>", lambda _: self.main_text.edit_redo())
         self.main_text.bind("<<Modified>>", self.modified)
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
@@ -360,15 +358,13 @@ class Application(ThemedTk):
                 self.main_text.delete("1.0", END)
                 log_debug(f"Read {lines_in} from {self.f.name}")
             except UnicodeDecodeError:
-                lines_in = ""
+                lines_in = [""]
                 messagebox.showerror(
                     "Bad encoding",
                     "The encoding of the file isn't supported",
                     parent=self,
                 )
             if len(lines_in) > 0:
-                if isinstance(lines_in[0], bytes):
-                    lines_in = [i.decode() for i in lines_in]
                 if lines_in[-1][-1:] == "\n":
                     lines_in[-1] = lines_in[-1][:-1]
                 for i in lines_in:
@@ -430,6 +426,8 @@ class Application(ThemedTk):
             ltext: list = self.main_text.get("1.0", END).split("\n")
             copy = ltext.copy()
             archive_path = relative_data("archive.txt")
+            if not os.path.exists(archive_path):
+                open(archive_path, "x", encoding="utf-8").close()
             with open(archive_path, "r", encoding="utf-8") as f:
                 success = f.readlines()
                 f.close()
@@ -465,7 +463,7 @@ class Application(ThemedTk):
 
     def update_theme(self, theme):
         ttk.Style().theme_use(theme)
-        self.set_theme(theme, BACKGROUNDS[theme], BACKGROUNDS[theme])
+        self.set_theme(theme, BACKGROUNDS[theme], BACKGROUNDS[theme])  # type: ignore
         self.config(bg=BACKGROUNDS[self.app_config["prefs"]["theme"]])
         try:
             self.main_text.config(bg=BACKGROUNDS[theme])

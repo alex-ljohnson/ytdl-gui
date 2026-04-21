@@ -8,7 +8,8 @@ Info
 Logs
 tksvg0.7
 utils
-AtomicParsley-win32-0.9.0
+# AtomicParsley-win32-0.9.0 # Legacy version
+AtomicParsleyWindows # @20240608.083822.1ed9031
 
 Files:
 embedthumbnail.py # Change this with the embedthumbnail.py in the youtube-dl library folder.

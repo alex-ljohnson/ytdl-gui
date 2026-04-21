@@ -92,7 +92,7 @@ class AboutWindow(Toplevel):
 
         atomic_frm = ttk.Frame(self)
         at_lic_txt = Text(atomic_frm)
-        with open(relative_path("AtomicParsley-win32-0.9.0\\COPYING"), "r", encoding="utf-8") as f:
+        with open(relative_path("AtomicParsleyWindows\\COPYING.txt"), "r", encoding="utf-8") as f:
             at_lic_txt.insert(INSERT, "".join(f.readlines()))
             f.close()
         at_lic_txt.config(state=DISABLED)

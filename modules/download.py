@@ -1,4 +1,5 @@
 """Provides window and logic for downloading"""
+
 import os
 import threading
 from tkinter import Misc, messagebox
@@ -7,7 +8,11 @@ from typing import TYPE_CHECKING, Callable
 
 from yt_dlp import YoutubeDL
 
-from modules.constants import COMPATIBLE_FORMATS, THUMBNAIL_AUDIO_FORMATS, THUMBNAIL_VIDEO_FORMATS
+from modules.constants import (
+    COMPATIBLE_FORMATS,
+    THUMBNAIL_AUDIO_FORMATS,
+    THUMBNAIL_VIDEO_FORMATS,
+)
 from modules.extension import ExtensionManager, PlatformExtension
 from modules.out_win import OutputWindow
 from modules.utils import disable_insert, log_debug, relative_data, relative_path
@@ -19,8 +24,8 @@ if TYPE_CHECKING:
 class Downloader:
     """Provides functionality for file downloading"""
 
-    def __init__(self, download_options: dict, output_directory: str, master: Misc | None = None) -> None:
-        self.master: Application = master
+    def __init__(self, download_options: dict, output_directory: str, master: "Application") -> None:
+        self.master: "Application" = master
         self.download_options = download_options
         self.output_directory = output_directory
         self.download_window = None
@@ -41,7 +46,7 @@ class Downloader:
             )
             log_debug("Created yt win")
 
-    def format_select(self, ctx):
+    def format_select(self, ctx: dict[str, list[dict]]):
         """Select the best video and the best audio that won't result in an mkv."""
         # formats are already sorted worst to best
         video_ext = self.download_options["video_format"]
@@ -49,10 +54,10 @@ class Downloader:
         resolution = self.download_options["resolution"]
         do_audio = self.download_options["audio"]
         strict_format = self.download_options["strict_format"]
-        formats: list[dict] = ctx.get("formats")[::-1]
+        formats: list[dict] = ctx["formats"][::-1]  # type: ignore
 
-        best_audio: dict = None
-        best_video: dict = None
+        best_audio: dict[str, str] | None = None
+        best_video: dict[str, str] | None = None
 
         if do_audio:
             best_audio = next(
@@ -73,15 +78,16 @@ class Downloader:
                     None,
                 )
                 print("Requested format not available, falling back to m4a.")
-            print(
-                f"[Format Selection] Using {best_audio['ext']} ({best_audio.get('format_note', 'Empty') or 'Empty'}) audio only"
-            )
-            yield {
-                "format_id": best_audio["format_id"],
-                "ext": best_audio["ext"],
-                "requested_formats": [best_audio],
-                "protocol": best_audio["protocol"],
-            }
+            if best_audio is not None:
+                print(
+                    f"[Format Selection] Using {best_audio['ext']} ({best_audio.get('format_note', 'Empty') or 'Empty'}) audio only"
+                )
+                yield {
+                    "format_id": best_audio["format_id"],
+                    "ext": best_audio["ext"],
+                    "requested_formats": [best_audio],
+                    "protocol": best_audio["protocol"],
+                }
         else:
             has_audio = False
             if video_ext != "best":
@@ -156,64 +162,70 @@ class Downloader:
             if best_video is None:
                 print("No supported video format found")
                 yield
-            if not has_audio and video_ext != "best":
-                audio_ext = COMPATIBLE_FORMATS[best_video["ext"]]
-                best_audio = next(
-                    f
-                    for f in formats
-                    if (
-                        f.get("acodec", "none") != "none"
-                        and f.get("vcodec", "none") == "none"
-                        and f["ext"] in audio_ext
+
+            if best_video is not None:
+                if not has_audio and video_ext != "best":
+                    audio_ext = COMPATIBLE_FORMATS[best_video["ext"]]
+                    best_audio = next(
+                        f
+                        for f in formats
+                        if (
+                            f.get("acodec", "none") != "none"
+                            and f.get("vcodec", "none") == "none"
+                            and f["ext"] in audio_ext
+                        )
                     )
-                )
-            elif not has_audio:
-                best_audio = next(
-                    (f for f in formats if f.get("acodec", "none") != "none" and f.get("vcodec", "none") == "none"),
-                    None,
-                )
+                elif not has_audio:
+                    best_audio = next(
+                        (f for f in formats if f.get("acodec", "none") != "none" and f.get("vcodec", "none") == "none"),
+                        None,
+                    )
 
-            if best_audio is not None and video_ext != "best":
-                print(
-                    f"[Format Selection] Merging {best_video['ext']} ({best_video.get('format_note', 'Empty')}) and {best_audio['ext']} ({best_audio.get('format_note', 'Empty')})"
-                )
-                # These are the minimum required fields for a merged format
-                yield {
-                    "format_id": f'{best_video["format_id"]}+{best_audio["format_id"]}',
-                    "ext": best_video["ext"],
-                    "requested_formats": [best_video, best_audio],
-                    "protocol": f'{best_video["protocol"]}+{best_audio["protocol"]}',
-                }
-            elif best_audio is not None:
-                print(
-                    f"[Format Selection] Merging {best_video['ext']} ({best_video.get('format_note', 'Empty')}) and {best_audio['ext']} ({best_audio.get('format_note', 'Empty')}) into mkv"
-                )
-                yield {
-                    "format_id": f'{best_video["format_id"]}+{best_audio["format_id"]}',
-                    "ext": "mkv",
-                    "requested_formats": [best_video, best_audio],
-                    "protocol": f'{best_video["protocol"]}+{best_audio["protocol"]}',
-                }
+                if best_audio is not None and video_ext != "best":
+                    print(
+                        f"[Format Selection] Merging {best_video['ext']} ({best_video.get('format_note', 'Empty')}) and {best_audio['ext']} ({best_audio.get('format_note', 'Empty')})"
+                    )
+                    # These are the minimum required fields for a merged format
+                    yield {
+                        "format_id": f'{best_video["format_id"]}+{best_audio["format_id"]}',
+                        "ext": best_video["ext"],
+                        "requested_formats": [best_video, best_audio],
+                        "protocol": f'{best_video["protocol"]}+{best_audio["protocol"]}',
+                    }
+                elif best_audio is not None:
+                    print(
+                        f"[Format Selection] Merging {best_video['ext']} ({best_video.get('format_note', 'Empty')}) and {best_audio['ext']} ({best_audio.get('format_note', 'Empty')}) into mkv"
+                    )
+                    yield {
+                        "format_id": f'{best_video["format_id"]}+{best_audio["format_id"]}',
+                        "ext": "mkv",
+                        "requested_formats": [best_video, best_audio],
+                        "protocol": f'{best_video["protocol"]}+{best_audio["protocol"]}',
+                    }
 
-            else:
-                print(f"[Format Selection] Using {best_video['ext']} ({best_video.get('format_note', 'Empty')}) only")
-                yield {
-                    "format_id": best_video["format_id"],
-                    "ext": best_video["ext"],
-                    "requested_formats": [best_video],
-                    "protocol": best_video["protocol"],
-                }
+                else:
+                    print(
+                        f"[Format Selection] Using {best_video['ext']} ({best_video.get('format_note', 'Empty')}) only"
+                    )
+                    yield {
+                        "format_id": best_video["format_id"],
+                        "ext": best_video["ext"],
+                        "requested_formats": [best_video],
+                        "protocol": best_video["protocol"],
+                    }
 
     def download(self, lines, parallel: bool, print_log: bool):
         def progress_hook(d: dict):
             def inner_hook(d: dict):
+                if self.download_window is None:
+                    return
                 if d["status"] == "downloading":
                     try:
                         if d.get("total_bytes", None) is not None:
                             self.download_window.progress["value"] = d["downloaded_bytes"] / d["total_bytes"]
                         elif d["total_bytes_estimate"] != 0:
                             self.download_window.progress["value"] = d["downloaded_bytes"] / d["total_bytes_estimate"]
-                    except (KeyError, ZeroDivisionError) as e:
+                    except (KeyError, ZeroDivisionError):
                         pass
                     else:
                         self.download_window.percent.set(d["_percent_str"])
@@ -297,41 +309,21 @@ class Downloader:
         if not self.master.app_config["prefs"]["disable_stats"]:
             log_debug("Added progress hook")
             opts["progress_hooks"].append(progress_hook)
-        ytdl = YoutubeDL(opts)
+        ytdl = YoutubeDL(opts)  # type: ignore
 
-        items = []
-        for i in lines:
-            extension_found = False
-            platform_extensions = [
-                e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
-            ]
-            for extension in platform_extensions:
-                if extension.check_type(i):
-                    if not extension.ready:
-                        ans = messagebox.askyesnocancel(
-                            f"{extension.get_name()} not enabled",
-                            f"{extension.get_name()} support is an optional extra.\nTo enable it either go to Tools > Manage extensions...\nOr click 'Yes' to enable it now.",
-                            parent=self.download_window,
-                        )
-                        if ans is None:
-                            return
-                        elif ans:
-                            extension.enable()
-                    if extension.ready:
-                        items.extend(extension.get_items(i))
-                    extension_found = True
-                    break
-            if not extension_found and not i.strip() == "" and not i.strip().startswith("#"):
-                items.append(i)
+        items = self.apply_extensions(lines)
+        if items is None:
+            return
         if items[-1].strip() == "":
             items = items[:-1]
         self.running = True
         if not print_log:
-            disable_insert(
-                self.download_window.out_text,
-                END,
-                "Check console window if you want to see output",
-            )
+            if self.download_window is not None:
+                disable_insert(
+                    self.download_window.out_text,
+                    END,
+                    "Check console window if you want to see output",
+                )
         if not parallel:
             ytdl.download(items)
         else:
@@ -348,13 +340,43 @@ class Downloader:
             f.truncate(0)
             f.close()
         self.running = False
-        self.download_window.percent.set("All videos downloaded successfully (window may be closed)")
-        print("Process finished successfully\nWindow may be closed...", end="")
-        messagebox.showinfo(
-            "Download finished",
-            "Download finished successfully",
-            parent=self.download_window,
-        )
+        if self.download_window is not None:
+            self.download_window.percent.set("All videos downloaded successfully (window may be closed)")
+            print("Process finished successfully\nWindow may be closed...", end="")
+            messagebox.showinfo(
+                "Download finished",
+                "Download finished successfully",
+                parent=self.download_window,  # type: ignore
+            )
+
+    def apply_extensions(self, lines) -> list[str] | None:
+        items = []
+        for i in lines:
+            extension_found = False
+            if ExtensionManager.instance is None:
+                print("Extension manager not initialised, skipping extension checks")
+                return lines
+            platform_extensions = [
+                e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
+            ]
+            for extension in platform_extensions:
+                if extension.check_type(i):
+                    if not extension.ready:
+                        ans = messagebox.askyesnocancel(
+                            f"{extension.get_name()} not enabled",
+                            f"{extension.get_name()} support is an optional extra.\nTo enable it either go to Tools > Manage extensions...\nOr click 'Yes' to enable it now.\nClick no to continue without enabling the extension.",
+                            parent=self.download_window,  # type: ignore
+                        )
+                        if ans is None:
+                            return None
+                        if ans:
+                            extension.enable()
+                    if extension.ready:
+                        items.extend(extension.get_items(i))
+                    extension_found = True
+                    break
+            if not extension_found and not i.strip() == "" and not i.strip().startswith("#"):
+                items.append(i)
 
 
 class DownloadWindow(OutputWindow):
@@ -364,7 +386,7 @@ class DownloadWindow(OutputWindow):
         self,
         master: Misc | None = None,
         title="New window",
-        download_function: Callable = None,
+        download_function: Callable = None,  # type: ignore
         block=True,
         *,
         background: str | None = None,
