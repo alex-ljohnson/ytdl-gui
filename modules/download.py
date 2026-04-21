@@ -410,7 +410,7 @@ class Downloader:
                         items.extend(expanded)
                 extension_found = True
                 break
-            if not extension_found and i and not i.startswith("#"):
+            if not extension_found and i.strip() and not i.startswith("#"):
                 items.append(i)
 
         for extension in download_extensions:
