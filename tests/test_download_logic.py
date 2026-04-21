@@ -71,3 +71,73 @@ def test_get_js_runtime_delegates_to_find_js_runtime(downloader, monkeypatch):
 def test_get_js_runtime_returns_none_when_no_runtime(downloader, monkeypatch):
     monkeypatch.setattr("modules.download.find_js_runtime", lambda: None)
     assert downloader.get_js_runtime() is None
+
+
+def test_download_includes_js_runtimes_when_runtime_found(monkeypatch, tmp_path):
+    captured_opts = {}
+
+    class FakeYtdl:
+        def __init__(self, opts):
+            captured_opts.update(opts)
+        def download(self, items):
+            pass
+
+    archive = tmp_path / "archive.txt"
+    archive.touch()
+
+    master = MagicMock()
+    master.app_config = {"prefs": {"verbosity": False, "disable_stats": True}}
+
+    download_options = {
+        "video_format": "mp4", "audio_format": "m4a", "resolution": 1080,
+        "audio": False, "strict_format": False, "format_string": "",
+        "output_template": "", "audio_post": False, "metadata": False,
+        "thumbnail": False, "subtitles": False, "description": False,
+    }
+
+    d = Downloader(download_options, "C:/tmp", master)
+    d.download_window = MagicMock()
+
+    monkeypatch.setattr("modules.download.YoutubeDL", FakeYtdl)
+    monkeypatch.setattr("modules.download.relative_data", lambda p, **kw: str(archive))
+    monkeypatch.setattr("modules.download.relative_path", lambda p, *a, **kw: str(tmp_path / "cookies.txt"))
+    monkeypatch.setattr(d, "get_js_runtime", lambda: "deno")
+    monkeypatch.setattr(d, "apply_extensions", lambda lines: lines)
+
+    d.download(["https://youtu.be/test"], parallel=False, print_log=True)
+    assert captured_opts.get("js_runtimes") == ["deno"]
+
+
+def test_download_omits_js_runtimes_when_no_runtime(monkeypatch, tmp_path):
+    captured_opts = {}
+
+    class FakeYtdl:
+        def __init__(self, opts):
+            captured_opts.update(opts)
+        def download(self, items):
+            pass
+
+    archive = tmp_path / "archive.txt"
+    archive.touch()
+
+    master = MagicMock()
+    master.app_config = {"prefs": {"verbosity": False, "disable_stats": True}}
+
+    download_options = {
+        "video_format": "mp4", "audio_format": "m4a", "resolution": 1080,
+        "audio": False, "strict_format": False, "format_string": "",
+        "output_template": "", "audio_post": False, "metadata": False,
+        "thumbnail": False, "subtitles": False, "description": False,
+    }
+
+    d = Downloader(download_options, "C:/tmp", master)
+    d.download_window = MagicMock()
+
+    monkeypatch.setattr("modules.download.YoutubeDL", FakeYtdl)
+    monkeypatch.setattr("modules.download.relative_data", lambda p, **kw: str(archive))
+    monkeypatch.setattr("modules.download.relative_path", lambda p, *a, **kw: str(tmp_path / "cookies.txt"))
+    monkeypatch.setattr(d, "get_js_runtime", lambda: None)
+    monkeypatch.setattr(d, "apply_extensions", lambda lines: lines)
+
+    d.download(["https://youtu.be/test"], parallel=False, print_log=True)
+    assert "js_runtimes" not in captured_opts

@@ -58,6 +58,7 @@ class Downloader:
         return find_ffmpeg_dir()
 
     def get_js_runtime(self) -> str | None:
+        """Return js_runtimes specifier for yt-dlp (None means no runtime found)."""
         return find_js_runtime()
 
     def format_select(self, ctx: dict[str, list[dict]]):
