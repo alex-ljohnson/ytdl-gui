@@ -1,6 +1,6 @@
 """Provides redirection classes for textIO outputs"""
 import sys
-from tkinter import DISABLED, END, NORMAL, TclError, Text, messagebox
+from tkinter import DISABLED, END, NORMAL, TclError, Text
 
 
 class _RedirectBase:
