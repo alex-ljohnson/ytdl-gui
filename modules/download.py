@@ -1,6 +1,7 @@
 """Provides window and logic for downloading"""
 
 import os
+import shutil
 import threading
 from tkinter import Misc, messagebox
 from tkinter.constants import END
@@ -45,6 +46,51 @@ class Downloader:
                 block=False,
             )
             log_debug("Created yt win")
+
+    def get_ffmpeg(self) -> str | None:
+        """Return the best ffmpeg_location for yt-dlp, preferring installs with both ffmpeg and ffprobe."""
+        bundled_ffmpeg: str | None = None
+        try:
+            from imageio_ffmpeg import get_ffmpeg_exe
+            candidate = get_ffmpeg_exe()
+            if os.path.isfile(candidate):
+                bundled_ffmpeg = candidate
+        except (RuntimeError, ImportError):
+            pass
+
+        bundled_has_ffprobe = False
+        if bundled_ffmpeg:
+            d = os.path.dirname(bundled_ffmpeg)
+            for name in ("ffprobe.exe", "ffprobe"):
+                if os.path.isfile(os.path.join(d, name)):
+                    bundled_has_ffprobe = True
+                    break
+
+        path_ffmpeg = shutil.which("ffmpeg")
+        path_ffprobe = shutil.which("ffprobe")
+
+        if path_ffmpeg and path_ffprobe:
+            log_debug("[FFmpeg] Using system PATH (ffmpeg + ffprobe)")
+            return None
+
+        if bundled_ffmpeg and bundled_has_ffprobe:
+            ffmpeg_dir = os.path.dirname(bundled_ffmpeg)
+            log_debug(f"[FFmpeg] Using bundled ffmpeg+ffprobe: {ffmpeg_dir}")
+            return ffmpeg_dir
+
+        if bundled_ffmpeg:
+            if not path_ffprobe:
+                log_debug("[FFmpeg] No ffprobe found; some postprocessors may fail")
+            log_debug(f"[FFmpeg] Using bundled ffmpeg: {bundled_ffmpeg}")
+            return bundled_ffmpeg
+
+        if path_ffmpeg:
+            if not path_ffprobe:
+                log_debug("[FFmpeg] ffprobe not found on PATH; some postprocessors may fail")
+            return None
+
+        log_debug("[FFmpeg] No ffmpeg installation found")
+        return None
 
     def format_select(self, ctx: dict[str, list[dict]]):
         """Select the best video and the best audio that won't result in an mkv."""
@@ -265,10 +311,7 @@ class Downloader:
             "default_search": "auto",
             "outtmpl": f"{self.output_directory}\\%(title)s-%(uploader)s-%(upload_date)s.%(ext)s",
             "format": self.format_select,
-            # "ffmpeg_location": relative_path("ffmpeg-20200115-0dc0837-win64-static\\bin"),
-            "ffmpeg_location": relative_path(
-                "imageio_ffmpeg\\binaries\\ffmpeg-win64-v4.2.2.exe", unbundled_prefix=".venv\\Lib\\site-packages"
-            ),
+            "ffmpeg_location": self.get_ffmpeg(),
             "cookiefile": relative_path("Logs\\cookies.txt", True),
             "writethumbnail": self.download_options["thumbnail"],
             # "writethumbnail": False,

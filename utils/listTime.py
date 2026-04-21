@@ -1,16 +1,21 @@
 #!/usr/bin/env D:\propertyofalexjohnson\vscode\python\YTDL\.venv\Scripts\python.exe
-import os, sys
-from moviepy import editor
-from tkinter import filedialog, Text, END
+import os
+import sys
+from tkinter import END, Text, filedialog
 from typing import Union
-#find why moviepy causes error when compiled to exe.
+
+from moviepy import editor
+
+
+# find why moviepy causes error when compiled to exe.
 #    AttributeError: module 'moviepy.audio.fx.all' has no attribute 'audio_fadein'
 # ALSO INSTALL UPX! TO make exes smaller
-#To CHANGE:
+# To CHANGE:
 # ADD threaded delay with "This may take some time" through use of datetime check in self.write
-class GetStats():
+class GetStats:
     """Gets basic stats about a file or folder. Only folder video contents lenth currently."""
-    def __init__(self, pathname, quiet=False, silent=False, doLog=False, out: Union[str, Text]="default"):
+
+    def __init__(self, pathname, quiet=False, silent=False, doLog=False, out: Union[str, Text] = "default"):
         self.pathname = os.path.realpath(os.path.expandvars(pathname))
         self.quiet = quiet
         self.silent = silent
@@ -20,12 +25,14 @@ class GetStats():
         self.takeTime = False
         print("Start Of program...", file=open("..\\Logs\\timeLogs.txt", "w"))
         self.__dots__ = 0
+
     def wrtToSTDOUT(self, text, end="\n"):
         if type(self.out) == Text:
             self.out.insert(END, text + str(end))
         elif type(self.out) == str:
             if self.out.lower() == "default":
                 print(text, end=end)
+
     def write(self, text: str, long=0, importance=0):
         stages = ["|", "/", "-", "\\"]
         if not self.quiet or (importance == 1 and self.silent == False):
@@ -39,14 +46,15 @@ class GetStats():
             self.wrtToSTDOUT("Processing", end="")
         elif self.quiet and long == 2:
             self.__dots__ += 1
-            #print(f"\rProcessing{'.'*self.__dots__}", end="")
+            # print(f"\rProcessing{'.'*self.__dots__}", end="")
             self.wrtToSTDOUT(f"\rProcessing  {stages[self.__dots__%4]}", end="")
-                
+
         if self.log:
             self.wrtToSTDOUT(text, file=open("..\\Logs\\timeLogs.txt", "a"))
 
     def get_length(self, filename):
-        if not os.path.exists(filename): return None
+        if not os.path.exists(filename):
+            return None
         try:
             vid = editor.VideoFileClip(filename)
             dur = vid.duration
@@ -54,30 +62,39 @@ class GetStats():
             print(f"vv Error occurred getting video duration vv.\n\n{str(ex)}\n")
             sys.exit(f"vv Error occurred getting video duration vv.\n\n{str(ex)}\n")
         return dur
+
     def folder_length(self):
         sDir = self.pathname
         tlis = os.listdir(sDir)
         for i in tlis:
-            if (i.endswith(".mp4") or i.endswith(".mov") or i.endswith(".mkv") or i.endswith(".webm") or i.endswith(".avi")) and i.count(".temp") == 0:
+            if (
+                i.endswith(".mp4")
+                or i.endswith(".mov")
+                or i.endswith(".mkv")
+                or i.endswith(".webm")
+                or i.endswith(".avi")
+            ) and i.count(".temp") == 0:
                 self.lis.append(i)
         self.write("Gathered folder contents.")
-        totTime=0
+        totTime = 0
         self.write("<Video name>: <seconds.microseconds>\n\n--------------------", 1)
         for i in self.lis:
             t = self.get_length(os.path.join(self.pathname, i))
-            if t == None: continue
+            if t == None:
+                continue
             self.write(f"{i}: {t}s\n--------------------", 2)
             totTime += t
-        seconds=totTime%60
-        minutes=int((totTime/60)%60)
-        hours=int(totTime/3600)
+        seconds = totTime % 60
+        minutes = int((totTime / 60) % 60)
+        hours = int(totTime / 3600)
         self.write(f"Total video time: {hours}h:{minutes}m:{seconds}s\n\n", importance=1)
         return {"hours": hours, "minutes": minutes, "seconds": seconds}
+
 
 if __name__ == "__main__":
     args = sys.argv
     q = True
-    d=""
+    d = ""
     if len(args) > 1:
         d = args[1]
         if args[2].lower() == "false":

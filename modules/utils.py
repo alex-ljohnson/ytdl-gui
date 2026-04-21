@@ -1,6 +1,7 @@
 """Static utility functions for the program"""
 
 import os
+import shutil
 import sys
 from tkinter import DISABLED, NORMAL, Text
 
@@ -73,3 +74,42 @@ def relative_data(path: str, should_exist: bool = True):
         raise FileNotFoundError(f"File {res} isn't an existing data file.")
     log_debug(f"[File] Path {str(res)} found")
     return res
+
+
+def _bundled_ffmpeg_dir() -> str | None:
+    try:
+        probe = relative_path(os.path.join("ffmpeg-7.1-essentials_build", "ffprobe.exe"))
+        return os.path.dirname(probe)
+    except FileNotFoundError:
+        return None
+
+
+def find_ffprobe() -> str | None:
+    """Return the absolute path to ffprobe, or None if not found.
+
+    Checks system PATH first, then the bundled build.
+    """
+    which = shutil.which("ffprobe")
+    if which:
+        return which
+    d = _bundled_ffmpeg_dir()
+    if d:
+        return os.path.join(d, "ffprobe.exe")
+    return None
+
+
+def find_ffmpeg_dir() -> str | None:
+    """Return the ffmpeg directory for yt-dlp's ffmpeg_location.
+
+    Returns None when ffmpeg is on PATH (yt-dlp will use PATH automatically).
+    Returns the bundled build directory otherwise.
+    """
+    if shutil.which("ffmpeg"):
+        log_debug("[FFmpeg] Using system PATH")
+        return None
+    d = _bundled_ffmpeg_dir()
+    if d:
+        log_debug(f"[FFmpeg] Using bundled build: {d}")
+        return d
+    log_debug("[FFmpeg] No ffmpeg found")
+    return None
