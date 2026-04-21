@@ -13,7 +13,7 @@ from modules.constants import (
     THUMBNAIL_AUDIO_FORMATS,
     THUMBNAIL_VIDEO_FORMATS,
 )
-from modules.extension import ExtensionManager, PlatformExtension
+from modules.extension import DownloadExtension, ExtensionManager, PlatformExtension
 from modules.out_win import OutputWindow
 from modules.utils import (
     disable_insert,
@@ -359,6 +359,13 @@ class Downloader:
             f.truncate(0)
             f.close()
         self.running = False
+        if ExtensionManager.instance is not None:
+            download_extensions = [
+                e for e in ExtensionManager.instance.extensions.values() if isinstance(e, DownloadExtension)
+            ]
+            for extension in download_extensions:
+                if extension.ready:
+                    extension.download_finished(items)
         if self.download_window is not None:
             self.download_window.percent.set("All videos downloaded successfully (window may be closed)")
             print("Process finished successfully\nWindow may be closed...", end="")
@@ -374,6 +381,9 @@ class Downloader:
             return [i for i in lines if not i.startswith("#")]
         platform_extensions = [
             e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
+        ]
+        download_extensions = [
+            e for e in ExtensionManager.instance.extensions.values() if isinstance(e, DownloadExtension)
         ]
         items: list[str] = []
         for i in lines:
@@ -402,6 +412,10 @@ class Downloader:
                 break
             if not extension_found and i and not i.startswith("#"):
                 items.append(i)
+
+        for extension in download_extensions:
+            if extension.ready:
+                items = extension.download_starting(items)
         return items
 
 
@@ -415,7 +429,7 @@ class DownloadWindow(OutputWindow):
         download_function: Callable = None,  # type: ignore
         block=True,
         *,
-        background: str | None = None,
+        background: str = "white",
         **kwargs,
     ) -> None:
         super().__init__(master, title, block, background=background, **kwargs)

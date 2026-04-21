@@ -1,4 +1,5 @@
 """Provides HelpWindow class"""
+
 # pylint: disable=E0611
 from tkinter import BOTH, BOTTOM, DISABLED, INSERT, TOP, Misc, Text, Toplevel, ttk
 
@@ -8,7 +9,7 @@ from modules.utils import link, relative_path
 class HelpWindow(Toplevel):
     """Toplevel window for providing help to user"""
 
-    def __init__(self, master: Misc | None = None, *, background: str = None) -> None:
+    def __init__(self, master: Misc | None = None, *, background: str = "white") -> None:
         super().__init__(master, background=background)
 
         self.title("Youtube-dl GUI - Help")
