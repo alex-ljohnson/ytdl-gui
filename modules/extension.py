@@ -51,10 +51,9 @@ class PlatformExtension(Extension):
 class DownloadExtension(Extension):
     """Class which can be extended to provide support for new download methods"""
 
-    _running = False
-
     def __init__(self, name: str | None = None):
         super().__init__(name)
+        self._running = False
 
     def download_starting(self, items: list[str]):
         """This is called when a download is starting, and can be used to modify the list of items to be downloaded or perform other setup tasks. It should return the list of items to be downloaded, which may be modified from the input list."""
