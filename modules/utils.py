@@ -113,3 +113,23 @@ def find_ffmpeg_dir() -> str | None:
         return d
     log_debug("[FFmpeg] No ffmpeg found")
     return None
+
+
+def _bundled_quickjs() -> str | None:
+    try:
+        return relative_path(os.path.join("quickjs", "qjs.exe"))
+    except FileNotFoundError:
+        return None
+
+
+def find_js_runtime() -> str | None:
+    for name in ("deno", "bun", "node", "qjs"):
+        if shutil.which(name):
+            log_debug(f"[JSRuntime] Using system {name}")
+            return name if name != "qjs" else "quickjs"
+    path = _bundled_quickjs()
+    if path:
+        log_debug(f"[JSRuntime] Using bundled QuickJS: {path}")
+        return f"quickjs:{path}"
+    log_debug("[JSRuntime] No JS runtime found")
+    return None
