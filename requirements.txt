@@ -6,3 +6,4 @@ spotipy
 requests
 psutil
 mutagen
+yt-dlp-ejs
