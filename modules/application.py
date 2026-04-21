@@ -241,6 +241,13 @@ class Application(ThemedTk):
                 log_debug("[Update Check] No updates")
 
     def load_config(self):
+        def _apply_defaults(config, defaults):
+            for k, v in defaults.items():
+                if config.get(k) is None:
+                    config[k] = copy.deepcopy(v)
+                elif isinstance(v, dict):
+                    _apply_defaults(config[k], v)
+
         if not os.path.exists(DATA_PATH):
             log_debug("Creating '%appdata/Youtube-dl_GUI' folder")
             os.mkdir(DATA_PATH)
@@ -250,6 +257,9 @@ class Application(ThemedTk):
         with open(APP_CONFIG_JSON, "r", encoding="utf-8") as f:
             try:
                 self.app_config = json.load(f)
+                if not isinstance(self.app_config, dict):
+                    print("Error in config. Setting default config...")
+                    self.app_config = {}
             except json.decoder.JSONDecodeError:
                 print("Error in config. Setting default config...")
                 self.app_config = {}
@@ -257,13 +267,7 @@ class Application(ThemedTk):
             self.app_config = copy.deepcopy(DEFAULT_CONFIG)
             self.write_config()
             return
-        for k, v in DEFAULT_CONFIG.items():
-            if self.app_config.get(k) is None:
-                self.app_config[k] = copy.deepcopy(v)
-            elif isinstance(v, dict):
-                for k2, v2 in v.items():
-                    if self.app_config[k].get(k2) is None:
-                        self.app_config[k][k2] = copy.deepcopy(v2)
+        _apply_defaults(self.app_config, DEFAULT_CONFIG)
 
     def write_config(self):
         log_debug("[App Config] Written config", True)
@@ -311,7 +315,7 @@ class Application(ThemedTk):
         log_debug("Save as")
         if self.f is not None:
             self.f.close()
-        self.f = open(path, "r+", encoding="utf-8")
+        self.f = open(path, "w+", encoding="utf-8")
         self.title(f"Youtube-dl GUI - {path}")
         return self.save()
 

@@ -48,7 +48,15 @@ class Updater:
                 parent=self.master,
             )
             return None
-        comp = version_compare(tag, f"v{self.app_version}")
+        try:
+            comp = version_compare(tag, f"v{self.app_version}")
+        except ValueError as ex:
+            messagebox.showerror(
+                "Unable to check for update",
+                f"The latest release version format is invalid or unsupported: {tag}\n\n{ex}",
+                parent=self.master,
+            )
+            return None
         if comp == "=":
             if not quiet:
                 messagebox.showinfo("Up-to-date", "No updates found", parent=self.master)

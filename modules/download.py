@@ -323,6 +323,7 @@ class Downloader:
             opts["progress_hooks"].append(progress_hook)
         ytdl = YoutubeDL(opts)  # type: ignore
 
+        items = [i.strip() for i in items if (s := i.strip()) and not s.startswith("#")]
         items = self.apply_extensions(lines)
         if items is None:
             return
@@ -364,7 +365,7 @@ class Downloader:
     def apply_extensions(self, lines: list[str]) -> list[str] | None:
         if ExtensionManager.instance is None:
             log_debug("Extension manager not initialised, skipping extension checks")
-            return [i for i in lines if (s := i.strip()) and not s.startswith("#")]
+            return [i for i in lines if not i.startswith("#")]
         platform_extensions = [
             e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
         ]
@@ -393,8 +394,7 @@ class Downloader:
                         items.extend(expanded)
                 extension_found = True
                 break
-            stripped = i.strip()
-            if not extension_found and stripped and not stripped.startswith("#"):
+            if not extension_found and i and not i.startswith("#"):
                 items.append(i)
         return items
 
