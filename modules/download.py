@@ -15,7 +15,7 @@ from modules.constants import (
 )
 from modules.extension import ExtensionManager, PlatformExtension
 from modules.out_win import OutputWindow
-from modules.utils import disable_insert, log_debug, relative_data, relative_path
+from modules.utils import disable_insert, find_ffmpeg_dir, log_debug, relative_data, relative_path
 
 if TYPE_CHECKING:
     from modules.application import Application
@@ -48,7 +48,6 @@ class Downloader:
 
     def get_ffmpeg(self) -> str | None:
         """Return ffmpeg_location for yt-dlp (None means use system PATH)."""
-        from modules.utils import find_ffmpeg_dir
         return find_ffmpeg_dir()
 
     def format_select(self, ctx: dict[str, list[dict]]):
