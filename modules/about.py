@@ -1,15 +1,16 @@
+import os
 from tkinter import Misc, Text, Toplevel, font, ttk
 from tkinter.constants import BOTH, DISABLED, GROOVE, INSERT, LEFT, NW, RIGHT, TOP, W, Y
 from typing import TYPE_CHECKING
 
-from modules.utils import link, relative_path
+from modules.utils import _bundled_ffmpeg_dir, link, relative_path
 
 if TYPE_CHECKING:
     from modules.application import Application
 
 
 class AboutWindow(Toplevel):
-    def __init__(self, master: Misc | None = None, *, background: str = None) -> None:
+    def __init__(self, master: Misc | None = None, *, background: str = "white") -> None:
         super().__init__(master, background=background)
 
         self.master: Application
@@ -78,8 +79,19 @@ class AboutWindow(Toplevel):
         ).grid(column=2, row=6, sticky=W)
         self.about_note.add(self.main_frm, text="About Youtube-dl GUI")
 
-        # ffmpeg is shipped via ffmpeg-7.1-essentials_build/; its LICENSE is available
-        # at relative_path("ffmpeg-7.1-essentials_build/LICENSE") if a tab is added here.
+        ff_bin = _bundled_ffmpeg_dir()
+        if ff_bin:
+            ff_license = os.path.join(os.path.dirname(ff_bin), "LICENSE")
+            ffmpeg_frm = ttk.Frame(self)
+            ff_lic_txt = Text(ffmpeg_frm)
+            with open(ff_license, "r", encoding="utf-8") as f:
+                ff_lic_txt.insert(INSERT, "".join(f.readlines()))
+            ff_lic_txt.config(state=DISABLED)
+            ff_lic_y = ttk.Scrollbar(ffmpeg_frm, command=ff_lic_txt.yview)
+            ff_lic_y.pack(side=RIGHT, fill=Y, expand=True)
+            ff_lic_txt.config(yscrollcommand=ff_lic_y.set)
+            ff_lic_txt.pack(side=LEFT, fill=BOTH, expand=True)
+            self.about_note.add(ffmpeg_frm, text="FFmpeg License")
 
         atomic_frm = ttk.Frame(self)
         at_lic_txt = Text(atomic_frm)
