@@ -1,51 +1,55 @@
 # YTDL GUI
 A GUI For youtube-dl. Capable of many features + spotify-youtube translation support.
 ## What is this?
-	This is a python program providing an implementation of YTDL in a GUI form.
+This is a python program providing an implementation of YTDL in a GUI form.
 ## How does it work?
-	It uses a tkinter GUI along with the youtube_dl module for python to provide a simple, easy-to-use user interface.
+It uses a tkinter GUI along with the youtube_dl module for python to provide a simple, easy-to-use user interface.
 	
 ## Installing the program
-- ### Using the installer (recommended)
-	The best way to install the program for use is to use the installer provided under the releases section.
-- ### Using the source code
-	Clone the repository and create a virtual env (NAMED ".venv") in the same file as [\_\_main\_\_.py](__main__.py). Install the [requirements](requirements.txt) into the environment.
-	```bash
+### Using the installer (recommended)
+The best way to install the program for use is to use the installer provided under the releases section.
+
+### Using the source code
+Clone the repository and create a virtual env (NAMED ".venv") in the same file as [\_\_main\_\_.py](__main__.py).Install the [requirements](requirements.txt) into the environment.
+```bash
 	git clone https://github.com/MrTransparentBox/ytdl-gui.git
 	cd ytdl-gui
 	python -m venv .venv
-	"./.venv/Scripts/activate"
+	.\.venv\Scripts\activate"
 	pip install -r requirement.txt
-	```
-	
+```
+#### Dependencies
+- Minimum python version: `3.10` (type unions)
+
+
 ## Using the program
 ### First setup
-	First time opening the program, you will be asked to give a directory. 
-	This will be the location which file will be downloaded to and scans will be taken from.
+First time opening the program, you will be asked to give a directory. 
+This will be the location which file will be downloaded to and scans will be taken from.
 
 ### Using the GUI
-	Once the GUI is open you must enter one url on each line of the textbox in the GUI window. 
-	Then, once saved, you may click the download button.
+Once the GUI is open you must enter one url on each line of the textbox in the GUI window. 
+Then, once saved, you may click the download button.
 	
 ### Customising options
-	Under 'tools' you will find 'Download Options...'. 
-	When you click this a new menu pops up with different options for how and what should be downloaded.
+Under 'tools' you will find 'Download Options...'. 
+When you click this a new menu pops up with different options for how and what should be downloaded.
 	
 ### Customising preferences
-	Under 'file' you will find 'Preferences'. 
-	Clicking this brings up a menu with settings to customise the way the app behaves.
+Under 'file' you will find 'Preferences'. 
+Clicking this brings up a menu with settings to customise the way the app behaves.
 
 ### Getting help
-	For more information visit "Help > Help & Instructions" in the app's menu.
+For more information visit "Help > Help & Instructions" in the app's menu.
 
 ### Choosing a font
-	In the view menu, under 'Font...' you can find a menu which allows you to select a font to be used in the text boxes.
+In the view menu, under 'Font...' you can find a menu which allows you to select a font to be used in the text boxes.
 
 
 
 ## Advanced
 ### Writing extensions
-	If you wish to add custom functionality to the program you can write your own python extensions. All python modules under the "(_internal)/modules/extensions" folder will be loaded at runtime.
+If you wish to add custom functionality to the program you can write your own python extensions. All python modules under the "(_internal)/modules/extensions" folder will be loaded at runtime.
 
 #### Example
 ```python
@@ -71,7 +75,7 @@ class MyExtension(Extension):
 #### Available packages
 The packages available to import in your module include:
 
-- Standard library 
+- Python Standard library 
 - altgraph==0.17.4
 - async-timeout==4.0.3
 - autoflake==2.2.1
