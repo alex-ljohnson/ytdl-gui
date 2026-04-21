@@ -3,6 +3,8 @@ import os
 import subprocess
 import threading
 
+from modules.utils import find_ffprobe
+
 class GetStats():
     """Gets basic stats about a file or folder. Only folder video contents lenth currently.
 
@@ -41,10 +43,7 @@ class GetStats():
             print(f"\rProcessing  {stages[self.__dots__%4]}", end="")
                 
     def get_length(self, filename) -> float | None:
-        if not os.path.exists(filename):
-            return None
-        if self._ffprobe is None:
-            print(f"ffprobe not found; cannot read duration of {filename}")
+        if not os.path.exists(filename) or self._ffprobe is None:
             return None
         try:
             result = subprocess.run(
@@ -74,8 +73,9 @@ class GetStats():
         tlis: list[str] = os.listdir(self.pathname)
         self.write("Gathered folder contents.")
         self.totTime = 0
-        from modules.utils import find_ffprobe
         self._ffprobe = find_ffprobe()
+        if self._ffprobe is None:
+            self.write("ffprobe not found; duration scan unavailable", importance=1)
         self.write("<Video name>: <seconds>\n\n--------------------", 1)
         threads: list[threading.Thread] = []
         for fn in tlis:

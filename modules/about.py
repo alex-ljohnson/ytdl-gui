@@ -78,9 +78,8 @@ class AboutWindow(Toplevel):
         ).grid(column=2, row=6, sticky=W)
         self.about_note.add(self.main_frm, text="About Youtube-dl GUI")
 
-        # ffmpeg is shipped via imageio_ffmpeg; the standalone LICENSE.txt folder is no
-        # longer bundled. A tab is intentionally omitted until a replacement license path
-        # is wired up.
+        # ffmpeg is shipped via ffmpeg-7.1-essentials_build/; its LICENSE is available
+        # at relative_path("ffmpeg-7.1-essentials_build/LICENSE") if a tab is added here.
 
         atomic_frm = ttk.Frame(self)
         at_lic_txt = Text(atomic_frm)
