@@ -1,4 +1,8 @@
-import os, threading
+import json
+import os
+import subprocess
+import threading
+
 class GetStats():
     """Gets basic stats about a file or folder. Only folder video contents lenth currently.
 
@@ -20,6 +24,7 @@ class GetStats():
         self.totTime = 0
         self.__dots__ = 0
         self._tot_lock = threading.Lock()
+        self._ffprobe: str | None = None
     def write(self, text: str, importance=0, long=0):
         stages = ["|", "/", "-", "\\"]
         if not self.quiet or (importance == 1 and self.silent == False):
@@ -38,15 +43,12 @@ class GetStats():
     def get_length(self, filename) -> float | None:
         if not os.path.exists(filename):
             return None
-        import json, subprocess
-        from modules.utils import find_ffprobe
-        ffprobe = find_ffprobe()
-        if ffprobe is None:
+        if self._ffprobe is None:
             print(f"ffprobe not found; cannot read duration of {filename}")
             return None
         try:
             result = subprocess.run(
-                [ffprobe, "-v", "error", "-show_entries", "format=duration",
+                [self._ffprobe, "-v", "error", "-show_entries", "format=duration",
                  "-of", "json", filename],
                 capture_output=True, text=True, check=True,
             )
@@ -72,6 +74,8 @@ class GetStats():
         tlis: list[str] = os.listdir(self.pathname)
         self.write("Gathered folder contents.")
         self.totTime = 0
+        from modules.utils import find_ffprobe
+        self._ffprobe = find_ffprobe()
         self.write("<Video name>: <seconds>\n\n--------------------", 1)
         threads: list[threading.Thread] = []
         for fn in tlis:
