@@ -78,7 +78,7 @@ def relative_data(path: str, should_exist: bool = True):
 
 def _bundled_ffmpeg_dir() -> str | None:
     try:
-        probe = relative_path(os.path.join("ffmpeg-7.1-essentials_build", "ffprobe.exe"))
+        probe = relative_path(os.path.join("ffmpeg-7.1-essentials_build", "bin", "ffprobe.exe"))
         return os.path.dirname(probe)
     except FileNotFoundError:
         return None
