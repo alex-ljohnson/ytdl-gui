@@ -15,7 +15,13 @@ from modules.constants import (
 )
 from modules.extension import ExtensionManager, PlatformExtension
 from modules.out_win import OutputWindow
-from modules.utils import disable_insert, find_ffmpeg_dir, log_debug, relative_data, relative_path
+from modules.utils import (
+    disable_insert,
+    find_ffmpeg_dir,
+    log_debug,
+    relative_data,
+    relative_path,
+)
 
 if TYPE_CHECKING:
     from modules.application import Application
@@ -323,8 +329,8 @@ class Downloader:
             opts["progress_hooks"].append(progress_hook)
         ytdl = YoutubeDL(opts)  # type: ignore
 
-        items = [i.strip() for i in items if (s := i.strip()) and not s.startswith("#")]
-        items = self.apply_extensions(lines)
+        items = [i.strip() for i in lines if (s := i.strip()) and not s.startswith("#")]
+        items = self.apply_extensions(items)
         if items is None:
             return
         if items[-1].strip() == "":

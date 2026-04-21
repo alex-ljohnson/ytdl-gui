@@ -1,4 +1,5 @@
 """Provides redirection classes for textIO outputs"""
+
 import sys
 from tkinter import DISABLED, END, NORMAL, TclError, Text
 
@@ -35,11 +36,9 @@ class _RedirectBase:
 class StderrRedirect(_RedirectBase):
     """Redirects sys.stderr into a Text widget. Call close() to restore."""
 
-    def __init__(self, t: Text, interactive: bool = True, msgbox: bool = False, master=None):
+    def __init__(self, t: Text, interactive: bool = True):
         super().__init__(t, interactive)
         self.old_stderr = sys.stderr
-        self.master = master
-        self.msgbox = msgbox
         sys.stderr = self
 
     def write(self, s: str):
