@@ -18,6 +18,7 @@ from modules.out_win import OutputWindow
 from modules.utils import (
     disable_insert,
     find_ffmpeg_dir,
+    find_js_runtime,
     log_debug,
     relative_data,
     relative_path,
@@ -55,6 +56,9 @@ class Downloader:
     def get_ffmpeg(self) -> str | None:
         """Return ffmpeg_location for yt-dlp (None means use system PATH)."""
         return find_ffmpeg_dir()
+
+    def get_js_runtime(self) -> str | None:
+        return find_js_runtime()
 
     def format_select(self, ctx: dict[str, list[dict]]):
         """Select the best video and the best audio that won't result in an mkv."""
@@ -289,6 +293,9 @@ class Downloader:
             "postprocessors": [],
             "verbose": self.master.app_config["prefs"]["verbosity"],
         }
+        js_runtime = self.get_js_runtime()
+        if js_runtime:
+            opts["js_runtimes"] = [js_runtime]
         if self.download_options["format_string"].strip() != "":
             opts["format"] = self.download_options["format_string"]  #
             log_debug("[Format] Using custom format " + self.download_options["format_string"])

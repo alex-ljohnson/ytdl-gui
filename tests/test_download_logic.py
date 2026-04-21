@@ -61,3 +61,13 @@ def test_apply_extensions_tolerates_none_from_extension(downloader):
     ExtensionManager.instance = SimpleNamespace(extensions={"fake": fake})
     result = downloader.apply_extensions(["bad", "ok"])
     assert result == ["ok"]
+
+
+def test_get_js_runtime_delegates_to_find_js_runtime(downloader, monkeypatch):
+    monkeypatch.setattr("modules.download.find_js_runtime", lambda: "deno")
+    assert downloader.get_js_runtime() == "deno"
+
+
+def test_get_js_runtime_returns_none_when_no_runtime(downloader, monkeypatch):
+    monkeypatch.setattr("modules.download.find_js_runtime", lambda: None)
+    assert downloader.get_js_runtime() is None
