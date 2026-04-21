@@ -331,7 +331,7 @@ class Downloader:
 
         items = [i.strip() for i in lines if (s := i.strip()) and not s.startswith("#")]
         items = self.apply_extensions(items)
-        if items is None:
+        if items is None or len(items) == 0:
             return
         if items[-1].strip() == "":
             items = items[:-1]
