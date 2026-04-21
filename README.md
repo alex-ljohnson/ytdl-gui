@@ -12,7 +12,7 @@ The best way to install the program for use is to use the installer provided und
 ### Using the source code
 Clone the repository and create a virtual env (NAMED ".venv") in the same file as [\_\_main\_\_.py](__main__.py).Install the [requirements](requirements.txt) into the environment.
 ```bash
-	git clone https://github.com/MrTransparentBox/ytdl-gui.git
+	git clone https://github.com/alex-ljohnson/ytdl-gui.git
 	cd ytdl-gui
 	python -m venv .venv
 	.\.venv\Scripts\activate"
@@ -76,40 +76,24 @@ class MyExtension(Extension):
 The packages available to import in your module include:
 
 - Python Standard library 
-- altgraph==0.17.4
-- async-timeout==4.0.3
-- autoflake==2.2.1
-- Brotli==1.1.0
-- certifi==2022.12.7
-- charset-normalizer==3.3.2
-- colorama==0.4.6
-- decorator==4.4.2
-- idna==3.6
-- imageio==2.33.1
-- imageio-ffmpeg==0.4.9
-- moviepy==1.0.3
+- altgraph==0.17.5
+- certifi==2026.2.25
+- charset-normalizer==3.4.7
+- idna==3.11
 - mutagen==1.47.0
-- numpy==1.26.2
-- packaging==23.2
-- pefile==2023.2.7
-- Pillow==10.1.0
-- proglog==0.1.10
-- psutil==5.9.6
-- pycryptodomex==3.19.0
-- pyflakes==3.1.0
-- pyinstaller==6.3.0
-- pyinstaller-hooks-contrib==2023.10
-- pyupgrade==3.15.0
-- pywin32-ctypes==0.2.2
-- redis==4.5.1
-- requests==2.31.0
-- six==1.16.0
-- spotipy==2.23.0
-- tokenize-rt==5.2.0
-- tqdm==4.66.1
-- ttkthemes==3.2.2
-- urllib3==2.0.4
-- validators==0.22.0
-- websockets==12.0
-- yt-dlp==2023.11.16
-
+- packaging==26.1
+- pefile==2024.8.26
+- pillow==12.2.0
+- psutil==7.2.2
+- pyinstaller==6.19.0
+- pyinstaller-hooks-contrib==2026.4
+- pywin32-ctypes==0.2.3
+- redis==7.4.0
+- requests==2.33.1
+- setuptools==82.0.1
+- spotipy==2.26.0
+- ttkthemes==3.3.0
+- urllib3==2.6.3
+- validators==0.35.0
+- wheel==0.46.3
+- yt-dlp==2026.3.17

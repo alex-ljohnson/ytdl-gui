@@ -13,9 +13,15 @@ from modules.constants import (
     THUMBNAIL_AUDIO_FORMATS,
     THUMBNAIL_VIDEO_FORMATS,
 )
-from modules.extension import ExtensionManager, PlatformExtension
+from modules.extension import DownloadExtension, ExtensionManager, PlatformExtension
 from modules.out_win import OutputWindow
-from modules.utils import disable_insert, log_debug, relative_data, relative_path
+from modules.utils import (
+    disable_insert,
+    find_ffmpeg_dir,
+    log_debug,
+    relative_data,
+    relative_path,
+)
 
 if TYPE_CHECKING:
     from modules.application import Application
@@ -45,6 +51,10 @@ class Downloader:
                 block=False,
             )
             log_debug("Created yt win")
+
+    def get_ffmpeg(self) -> str | None:
+        """Return ffmpeg_location for yt-dlp (None means use system PATH)."""
+        return find_ffmpeg_dir()
 
     def format_select(self, ctx: dict[str, list[dict]]):
         """Select the best video and the best audio that won't result in an mkv."""
@@ -265,10 +275,7 @@ class Downloader:
             "default_search": "auto",
             "outtmpl": f"{self.output_directory}\\%(title)s-%(uploader)s-%(upload_date)s.%(ext)s",
             "format": self.format_select,
-            # "ffmpeg_location": relative_path("ffmpeg-20200115-0dc0837-win64-static\\bin"),
-            "ffmpeg_location": relative_path(
-                "imageio_ffmpeg\\binaries\\ffmpeg-win64-v4.2.2.exe", unbundled_prefix=".venv\\Lib\\site-packages"
-            ),
+            "ffmpeg_location": self.get_ffmpeg(),
             "cookiefile": relative_path("Logs\\cookies.txt", True),
             "writethumbnail": self.download_options["thumbnail"],
             # "writethumbnail": False,
@@ -322,8 +329,8 @@ class Downloader:
             opts["progress_hooks"].append(progress_hook)
         ytdl = YoutubeDL(opts)  # type: ignore
 
-        items = [i.strip() for i in items if (s := i.strip()) and not s.startswith("#")]
-        items = self.apply_extensions(lines)
+        items = [i.strip() for i in lines if (s := i.strip()) and not s.startswith("#")]
+        items = self.apply_extensions(items)
         if items is None:
             return
         if items[-1].strip() == "":
@@ -352,6 +359,13 @@ class Downloader:
             f.truncate(0)
             f.close()
         self.running = False
+        if ExtensionManager.instance is not None:
+            download_extensions = [
+                e for e in ExtensionManager.instance.extensions.values() if isinstance(e, DownloadExtension)
+            ]
+            for extension in download_extensions:
+                if extension.ready:
+                    extension.download_finished(items)
         if self.download_window is not None:
             self.download_window.percent.set("All videos downloaded successfully (window may be closed)")
             print("Process finished successfully\nWindow may be closed...", end="")
@@ -367,6 +381,9 @@ class Downloader:
             return [i for i in lines if not i.startswith("#")]
         platform_extensions = [
             e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
+        ]
+        download_extensions = [
+            e for e in ExtensionManager.instance.extensions.values() if isinstance(e, DownloadExtension)
         ]
         items: list[str] = []
         for i in lines:
@@ -395,6 +412,10 @@ class Downloader:
                 break
             if not extension_found and i and not i.startswith("#"):
                 items.append(i)
+
+        for extension in download_extensions:
+            if extension.ready:
+                items = extension.download_starting(items)
         return items
 
 
@@ -408,7 +429,7 @@ class DownloadWindow(OutputWindow):
         download_function: Callable = None,  # type: ignore
         block=True,
         *,
-        background: str | None = None,
+        background: str = "white",
         **kwargs,
     ) -> None:
         super().__init__(master, title, block, background=background, **kwargs)

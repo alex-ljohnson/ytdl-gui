@@ -280,8 +280,9 @@ class Application(ThemedTk):
         if self.ask_save() is None:
             return
         self.main_text.delete("1.0", END)
-        self.f.close()
-        self.f = None
+        if self.f is not None:
+            self.f.close()
+            self.f = None
 
     def save(self, event=None) -> bool:
         if self.f is None:
@@ -295,7 +296,7 @@ class Application(ThemedTk):
         self.f.seek(0)
         self.f.write(s)
         self.f.flush()
-        os.fsync(self.f)
+        os.fsync(self.f.fileno())
         return True
 
     def save_as(self, event=None) -> bool:
@@ -332,7 +333,8 @@ class Application(ThemedTk):
             log_debug("Asking save")
             sv = messagebox.askyesnocancel("Save Changes?", "Do you want to save your changes?", parent=self)
             if sv:
-                self.save()
+                if not self.save():
+                    return None
             return sv
         else:
             log_debug("Already saved.")
@@ -424,7 +426,7 @@ class Application(ThemedTk):
 
         if self.app_config["prefs"]["remove_success"]:
             ltext: list = self.main_text.get("1.0", END).split("\n")
-            copy = ltext.copy()
+            text_copy = ltext.copy()
             archive_path = relative_data("archive.txt")
             if not os.path.exists(archive_path):
                 open(archive_path, "x", encoding="utf-8").close()
@@ -436,10 +438,10 @@ class Application(ThemedTk):
             for i in ltext:
                 for x in success:
                     if x in i:
-                        copy.remove(i)
+                        text_copy.remove(i)
 
             self.main_text.delete("1.0", END)
-            self.main_text.insert("1.0", "\n".join(copy))
+            self.main_text.insert("1.0", "\n".join(text_copy))
 
     def open_time(self):
         self.time_window = TimeWindow(self, f"List Time Output - {self.app_config['dir']}", block=False)
@@ -488,7 +490,7 @@ class Application(ThemedTk):
         if ans is None:
             log_debug("Cancelled report.")
         elif ans:
-            link("https://github.com/MrTransparentBox/ytdl-gui/issues/new")
+            link("https://github.com/alex-ljohnson/ytdl-gui/issues/new")
             log_debug("Github report.")
         else:
             link("mailto:16JohnA28@gmail.com")

@@ -17,7 +17,7 @@ def sample_folder(tmp_path):
 def test_folder_length_processes_each_file_exactly_once(sample_folder):
     seen = []
 
-    def fake_get_length(self, filename, video=True):
+    def fake_get_length(self, filename):
         seen.append(os.path.basename(filename))
         return 10.0
 

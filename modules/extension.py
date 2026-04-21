@@ -1,4 +1,5 @@
 """Provides a base for extensions"""
+
 import importlib
 import pkgutil
 from tkinter import BooleanVar, Misc, Toplevel, messagebox, ttk
@@ -18,16 +19,9 @@ class Extension:
     _name: str | None = None
     # _REQUIRED_PACKAGES: set[str] = set()
 
-    def __init__(self):
+    def __init__(self, name: str | None = None):
+        self._name = name
         self.ready = False
-        # installed = {pkg.key for pkg in pkg_resources.working_set}  # pylint: disable=E1133
-        # missing = self._REQUIRED_PACKAGES - installed
-        # if missing:
-        #     python = sys.executable
-        #     subprocess.check_call([python, "-m", "pip", "install", *missing], stdout=subprocess.DEVNULL)
-        #     pip.main(["install", "--user", *missing])
-        # for package in self._REQUIRED_PACKAGES:
-        #     importlib.import_module(package)
 
     def get_name(self):
         return self._name or self.__class__.__name__
@@ -42,17 +36,48 @@ class Extension:
 class PlatformExtension(Extension):
     """Class which can be extended to provide support for new platforms"""
 
-    def __init__(self):
-        super().__init__()
-        self.ready = False
+    def __init__(self, name: str | None = None):
+        super().__init__(name)
 
-    def get_items(self, urn: str) -> list[str]:
+    def get_items(self, urn: str) -> list[str] | None:
         return [urn]
 
     def check_type(self, item: str) -> bool:
         if item:
             return True
         return False
+
+
+class DownloadExtension(Extension):
+    """Class which can be extended to provide support for new download methods"""
+
+    _running = False
+
+    def __init__(self, name: str | None = None):
+        super().__init__(name)
+
+    def download_starting(self, items: list[str]):
+        """This is called when a download is starting, and can be used to modify the list of items to be downloaded or perform other setup tasks. It should return the list of items to be downloaded, which may be modified from the input list."""
+        self._running = True
+        return items
+
+    def download_finished(self, items: list[str]):
+        """This is called when a download has finished, and can be used to perform any cleanup tasks or post-processing on the downloaded items."""
+        self._running = False
+
+    def is_running(self) -> bool:
+        """Returns whether a download is currently running using this extension."""
+        return self._running
+
+    def wait_for_end(self):
+        """Blocks until the download is finished."""
+        while self._running:
+            pass
+
+    def wait_for_start(self):
+        """Blocks until a download is started."""
+        while not self._running:
+            pass
 
 
 class ExtensionManager:
@@ -102,7 +127,7 @@ class ExtensionWindow(Toplevel):
     def __init__(self, master: Misc | None = None, *, background: str | None = None) -> None:
         super().__init__(master, background=background)  # type: ignore
 
-        self.master: Application
+        self.master: Application  # type: ignore
         self.title("Manage Extensions")
         self.iconbitmap(relative_path("Resources\\YTDLv2_256.ico"))
         self.protocol("WM_DELETE_WINDOW", self.win_close)
