@@ -1,8 +1,9 @@
 """This is a script to generate an easy to use GUI for the youtube-dl package.
 
-This is usually bundled into an executable with pyinstaller (or similar) for ease of use to non-python users.  
+This is usually bundled into an executable with pyinstaller (or similar) for ease of use to non-python users.
 This also implements some additional features on top of what youtube-dl provides, such as, total length calculation of videos in a folder, spotify support (eventually) and more...
 """
+
 import argparse
 import json
 import os
@@ -15,7 +16,13 @@ from ttkthemes import ThemedTk
 
 import modules.constants
 from modules.about import AboutWindow
-from modules.constants import APP_CONFIG_JSON, BACKGROUNDS, DATA_PATH, DEFAULT_CONFIG, ENABLED_THEMES
+from modules.constants import (
+    APP_CONFIG_JSON,
+    BACKGROUNDS,
+    DATA_PATH,
+    DEFAULT_CONFIG,
+    ENABLED_THEMES,
+)
 from modules.download import Downloader
 from modules.extension import ExtensionManager, ExtensionWindow
 from modules.font_wm import FontWm
@@ -85,7 +92,7 @@ class Application(ThemedTk):
         self.update_theme(self.app_config["prefs"]["theme"])
 
         if self.path is None:
-            self.path = relative_data("ToDownload.ytdl")
+            self.path = relative_data("ToDownload.ytdl", False)
             log_debug("Loading default .ytdl", True)
             if not os.path.exists(self.path):
                 open(self.path, "x", encoding="utf-8").close()  # Create if it doesn't exist

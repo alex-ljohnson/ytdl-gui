@@ -1,4 +1,5 @@
 """Static utility functions for the program"""
+
 import os
 import sys
 from tkinter import DISABLED, NORMAL, Text
@@ -46,7 +47,7 @@ def disable_insert(text: Text, index, chars, *args):
 
 def relative_path(path: str, create: bool = False, unbundled_prefix: str = "", bundled_prefix: str = ""):
     try:
-        base = os.path.abspath(os.path.join(sys._MEIPASS, bundled_prefix))  # pylint: disable=protected-access
+        base = os.path.abspath(os.path.join(sys._MEIPASS, bundled_prefix))  # type: ignore # pylint: disable=protected-access
         res = os.path.abspath(os.path.join(base, path))
     except (AttributeError, TypeError):
         base = os.path.abspath(os.path.join(os.path.abspath("."), unbundled_prefix))
