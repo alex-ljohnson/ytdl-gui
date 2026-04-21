@@ -13,9 +13,15 @@ from modules.constants import (
     THUMBNAIL_AUDIO_FORMATS,
     THUMBNAIL_VIDEO_FORMATS,
 )
-from modules.extension import ExtensionManager, PlatformExtension
+from modules.extension import DownloadExtension, ExtensionManager, PlatformExtension
 from modules.out_win import OutputWindow
-from modules.utils import disable_insert, log_debug, relative_data, relative_path
+from modules.utils import (
+    disable_insert,
+    find_ffmpeg_dir,
+    log_debug,
+    relative_data,
+    relative_path,
+)
 
 if TYPE_CHECKING:
     from modules.application import Application
@@ -45,6 +51,10 @@ class Downloader:
                 block=False,
             )
             log_debug("Created yt win")
+
+    def get_ffmpeg(self) -> str | None:
+        """Return ffmpeg_location for yt-dlp (None means use system PATH)."""
+        return find_ffmpeg_dir()
 
     def format_select(self, ctx: dict[str, list[dict]]):
         """Select the best video and the best audio that won't result in an mkv."""
@@ -161,7 +171,7 @@ class Downloader:
 
             if best_video is None:
                 print("No supported video format found")
-                yield
+                return
 
             if best_video is not None:
                 if not has_audio and video_ext != "best":
@@ -216,32 +226,43 @@ class Downloader:
 
     def download(self, lines, parallel: bool, print_log: bool):
         def progress_hook(d: dict):
-            def inner_hook(d: dict):
-                if self.download_window is None:
-                    return
-                if d["status"] == "downloading":
-                    try:
-                        if d.get("total_bytes", None) is not None:
-                            self.download_window.progress["value"] = d["downloaded_bytes"] / d["total_bytes"]
-                        elif d["total_bytes_estimate"] != 0:
-                            self.download_window.progress["value"] = d["downloaded_bytes"] / d["total_bytes_estimate"]
-                    except (KeyError, ZeroDivisionError):
-                        pass
-                    else:
-                        self.download_window.percent.set(d["_percent_str"])
-                    self.download_window.stat_string.set(str(d["_default_template"]))
-                elif d["status"] == "finished":
-                    try:
-                        print(f"Finished downloading {d['_total_bytes_str']} in {d['elapsed']} seconds\n")
-                    except KeyError:
-                        print("Download finished\n")
-                    finally:
-                        self.download_window.progress["value"] = 0
-                        self.download_window.percent.set("Download Complete! - Finishing up")
-                        tot = d["_total_bytes_str"]
-                        self.download_window.stat_string.set(f"{tot}/{tot} @ 0MiB/s")
+            if self.download_window is None:
+                return
+            status = d.get("status")
+            if status == "downloading":
+                total_bytes = d.get("total_bytes")
+                total = total_bytes if total_bytes is not None else (d.get("total_bytes_estimate") or 0)
+                downloaded = d.get("downloaded_bytes", 0)
+                pct_str = d.get("_percent_str")
+                stat_str = d.get("_default_template")
 
-            threading.Thread(target=inner_hook, args=[d]).start()
+                def apply_downloading():
+                    if self.download_window is None:
+                        return
+                    if total:
+                        self.download_window.progress["value"] = downloaded / total
+                    if pct_str is not None:
+                        self.download_window.percent.set(pct_str)
+                    if stat_str is not None:
+                        self.download_window.stat_string.set(str(stat_str))
+
+                self.download_window.after(0, apply_downloading)
+            elif status == "finished":
+                total_str = d.get("_total_bytes_str", "unknown")
+                elapsed = d.get("elapsed")
+                if elapsed is not None:
+                    print(f"Finished downloading {total_str} in {elapsed} seconds\n")
+                else:
+                    print("Download finished\n")
+
+                def apply_finished():
+                    if self.download_window is None:
+                        return
+                    self.download_window.progress["value"] = 0
+                    self.download_window.percent.set("Download Complete! - Finishing up")
+                    self.download_window.stat_string.set(f"{total_str}/{total_str} @ 0MiB/s")
+
+                self.download_window.after(0, apply_finished)
 
         archive_path = relative_data("archive.txt")
         if not os.path.exists(archive_path):
@@ -254,10 +275,7 @@ class Downloader:
             "default_search": "auto",
             "outtmpl": f"{self.output_directory}\\%(title)s-%(uploader)s-%(upload_date)s.%(ext)s",
             "format": self.format_select,
-            # "ffmpeg_location": relative_path("ffmpeg-20200115-0dc0837-win64-static\\bin"),
-            "ffmpeg_location": relative_path(
-                "imageio_ffmpeg\\binaries\\ffmpeg-win64-v4.2.2.exe", unbundled_prefix=".venv\\Lib\\site-packages"
-            ),
+            "ffmpeg_location": self.get_ffmpeg(),
             "cookiefile": relative_path("Logs\\cookies.txt", True),
             "writethumbnail": self.download_options["thumbnail"],
             # "writethumbnail": False,
@@ -311,8 +329,9 @@ class Downloader:
             opts["progress_hooks"].append(progress_hook)
         ytdl = YoutubeDL(opts)  # type: ignore
 
-        items = self.apply_extensions(lines)
-        if items is None:
+        items = [i.strip() for i in lines if (s := i.strip()) and not s.startswith("#")]
+        items = self.apply_extensions(items)
+        if items is None or len(items) == 0:
             return
         if items[-1].strip() == "":
             items = items[:-1]
@@ -340,6 +359,13 @@ class Downloader:
             f.truncate(0)
             f.close()
         self.running = False
+        if ExtensionManager.instance is not None:
+            download_extensions = [
+                e for e in ExtensionManager.instance.extensions.values() if isinstance(e, DownloadExtension)
+            ]
+            for extension in download_extensions:
+                if extension.ready:
+                    extension.download_finished(items)
         if self.download_window is not None:
             self.download_window.percent.set("All videos downloaded successfully (window may be closed)")
             print("Process finished successfully\nWindow may be closed...", end="")
@@ -349,34 +375,48 @@ class Downloader:
                 parent=self.download_window,  # type: ignore
             )
 
-    def apply_extensions(self, lines) -> list[str] | None:
-        items = []
+    def apply_extensions(self, lines: list[str]) -> list[str] | None:
+        if ExtensionManager.instance is None:
+            log_debug("Extension manager not initialised, skipping extension checks")
+            return [i for i in lines if not i.startswith("#")]
+        platform_extensions = [
+            e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
+        ]
+        download_extensions = [
+            e for e in ExtensionManager.instance.extensions.values() if isinstance(e, DownloadExtension)
+        ]
+        items: list[str] = []
         for i in lines:
             extension_found = False
-            if ExtensionManager.instance is None:
-                print("Extension manager not initialised, skipping extension checks")
-                return lines
-            platform_extensions = [
-                e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
-            ]
             for extension in platform_extensions:
-                if extension.check_type(i):
-                    if not extension.ready:
-                        ans = messagebox.askyesnocancel(
-                            f"{extension.get_name()} not enabled",
-                            f"{extension.get_name()} support is an optional extra.\nTo enable it either go to Tools > Manage extensions...\nOr click 'Yes' to enable it now.\nClick no to continue without enabling the extension.",
-                            parent=self.download_window,  # type: ignore
-                        )
-                        if ans is None:
-                            return None
-                        if ans:
-                            extension.enable()
-                    if extension.ready:
-                        items.extend(extension.get_items(i))
-                    extension_found = True
-                    break
-            if not extension_found and not i.strip() == "" and not i.strip().startswith("#"):
+                if not extension.check_type(i):
+                    continue
+                if not extension.ready:
+                    ans = messagebox.askyesnocancel(
+                        f"{extension.get_name()} not enabled",
+                        f"{extension.get_name()} support is an optional extra.\n"
+                        "To enable it either go to Tools > Manage extensions...\n"
+                        "Or click 'Yes' to enable it now.\n"
+                        "Click no to continue without enabling the extension.",
+                        parent=self.download_window,  # type: ignore
+                    )
+                    if ans is None:
+                        return None
+                    if ans:
+                        extension.enable()
+                if extension.ready:
+                    expanded = extension.get_items(i)
+                    if expanded:
+                        items.extend(expanded)
+                extension_found = True
+                break
+            if not extension_found and i and not i.startswith("#"):
                 items.append(i)
+
+        for extension in download_extensions:
+            if extension.ready:
+                items = extension.download_starting(items)
+        return items
 
 
 class DownloadWindow(OutputWindow):
@@ -389,7 +429,7 @@ class DownloadWindow(OutputWindow):
         download_function: Callable = None,  # type: ignore
         block=True,
         *,
-        background: str | None = None,
+        background: str = "white",
         **kwargs,
     ) -> None:
         super().__init__(master, title, block, background=background, **kwargs)

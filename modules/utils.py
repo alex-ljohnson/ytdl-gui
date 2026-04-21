@@ -1,6 +1,7 @@
 """Static utility functions for the program"""
 
 import os
+import shutil
 import sys
 from tkinter import DISABLED, NORMAL, Text
 
@@ -19,19 +20,24 @@ def log_debug(value: object, default_stdout: bool = True):
             print(value)
 
 
-def version_compare(ver1: str, ver2: str):
-    sp1 = ver1.split(".")
-    sp2 = ver2.split(".")
-    if len(sp1) != len(sp2):
+def version_compare(ver1: str, ver2: str) -> str:
+    def _parts(v: str) -> list:
+        out = []
+        for token in v.lstrip("v").split("."):
+            try:
+                out.append((0, int(token)))
+            except ValueError:
+                out.append((1, token))
+        return out
+
+    a, b = _parts(ver1), _parts(ver2)
+    if len(a) != len(b):
         raise ValueError(f"Version formats of {ver1} and {ver2} aren't the same.")
-    for i, v in enumerate(sp1):
-        if v > sp2[i]:
-            return ">"
-        elif v < sp2[i]:
-            return "<"
-        elif v == sp2[i] and i == ver1.count("."):
-            return "="
-    raise ValueError("Something went wrong and the comparisons didn't match.")
+    if a > b:
+        return ">"
+    if a < b:
+        return "<"
+    return "="
 
 
 # def add_to_queue(l: list, value: Any):
@@ -68,3 +74,42 @@ def relative_data(path: str, should_exist: bool = True):
         raise FileNotFoundError(f"File {res} isn't an existing data file.")
     log_debug(f"[File] Path {str(res)} found")
     return res
+
+
+def _bundled_ffmpeg_dir() -> str | None:
+    try:
+        probe = relative_path(os.path.join("ffmpeg-7.1-essentials_build", "bin", "ffprobe.exe"))
+        return os.path.dirname(probe)
+    except FileNotFoundError:
+        return None
+
+
+def find_ffprobe() -> str | None:
+    """Return the absolute path to ffprobe, or None if not found.
+
+    Checks system PATH first, then the bundled build.
+    """
+    which = shutil.which("ffprobe")
+    if which:
+        return which
+    d = _bundled_ffmpeg_dir()
+    if d:
+        return os.path.join(d, "ffprobe.exe")
+    return None
+
+
+def find_ffmpeg_dir() -> str | None:
+    """Return the ffmpeg directory for yt-dlp's ffmpeg_location.
+
+    Returns None when ffmpeg is on PATH (yt-dlp will use PATH automatically).
+    Returns the bundled build directory otherwise.
+    """
+    if shutil.which("ffmpeg"):
+        log_debug("[FFmpeg] Using system PATH")
+        return None
+    d = _bundled_ffmpeg_dir()
+    if d:
+        log_debug(f"[FFmpeg] Using bundled build: {d}")
+        return d
+    log_debug("[FFmpeg] No ffmpeg found")
+    return None

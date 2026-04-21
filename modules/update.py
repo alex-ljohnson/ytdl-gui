@@ -1,4 +1,5 @@
 """Provides classes & functionality for the programs auto updater"""
+
 import os
 import threading
 from tkinter import Misc, StringVar, TclError, Toplevel, messagebox, ttk
@@ -25,7 +26,7 @@ class Updater:
     def check_update(self, quiet: bool = False):
         try:
             latest = requests.get(
-                "https://api.github.com/repos/MrTransparentBox/ytdl-gui/releases/latest",
+                "https://api.github.com/repos/alex-ljohnson/ytdl-gui/releases/latest",
                 headers={
                     "accept": "application/vnd.github.v3+json",
                     "X-GitHub-Api-Version": "2022-11-28",
@@ -35,38 +36,47 @@ class Updater:
             if latest.status_code == 404:
                 messagebox.showinfo(
                     "No releases found",
-                    "There are no releases for this program.\nIf you think this is an error please report it on",
-                    parent=self,
+                    "There are no releases for this program.\nIf you think this is an error please report it.",
+                    parent=self.master,
                 )
                 return None
             latest.raise_for_status()
-            latest = latest.json()
-            tag = latest["tag_name"]
-        except (TimeoutError, requests.HTTPError) as ex:
+            tag = latest.json()["tag_name"]
+        except (TimeoutError, requests.RequestException) as ex:
             messagebox.showerror(
                 "Unable to check for update",
                 f"{ex}\n\nTry checking your internet connection, and try again.",
-                parent=self,
+                parent=self.master,
             )
             return None
-        comp = version_compare(tag, f"v{self.app_version}")
+        try:
+            comp = version_compare(tag, f"v{self.app_version}")
+        except ValueError as ex:
+            messagebox.showerror(
+                "Unable to check for update",
+                f"The latest release version format is invalid or unsupported: {tag}\n\n{ex}",
+                parent=self.master,
+            )
+            return None
         if comp == "=":
             if not quiet:
-                messagebox.showinfo("Up-to-date", "No updates found", parent=self)
+                messagebox.showinfo("Up-to-date", "No updates found", parent=self.master)
             return False
-        elif comp == ">":
-            messagebox.showinfo("Update available!", f"New version found: {tag}", parent=self.open_window)
+        if comp == ">":
+            messagebox.showinfo("Update available!", f"New version found: {tag}", parent=self.master)
             self.open_update_window(tag)
             return True
-        elif comp == "<" and not quiet:
+        if comp == "<" and not quiet:
             ans = messagebox.askyesno(
                 "Preview",
-                "Looks like you have a special preview or pre-release version! Do you want to install the last full release?",
+                "Looks like you have a special preview or pre-release version! "
+                "Do you want to install the last full release?",
+                parent=self.master,
             )
             if ans:
                 self.open_update_window(tag)
                 return True
-            return False
+        return False
 
     def open_update_window(self, version_tag):
         self.open_window = UpdateWindow(
@@ -78,21 +88,28 @@ class Updater:
 
     def start_update(self):
         filename = self.download_setup()
-        if filename is not None:
+        if filename is None:
+            return
+        if self.open_window is not None:
             self.open_window.destroy()
-            self.open_window = None
-            os.execv(
+        self.open_window = None
+        os.execv(
+            filename,
+            [
                 filename,
-                ["""/NOCANCEL /RESTARTAPPLICATIONS /SP- /SILENT /NOICONS \"/DIR=expand:{autopf}\\Youtube-dl GUI\""""],
-            )
-            os._exit(0)
+                "/NOCANCEL",
+                "/RESTARTAPPLICATIONS",
+                "/SP-",
+                "/SILENT",
+                "/NOICONS",
+                "/DIR=expand:{autopf}\\Youtube-dl GUI",
+            ],
+        )
 
     def download_setup(self):
-        filename = ""
-
         with requests.Session() as s:
             response = s.get(
-                "https://github.com/MrTransparentBox/ytdl-gui/releases/latest/download/Youtube-dl_GUI_Setup.exe",
+                "https://github.com/alex-ljohnson/ytdl-gui/releases/latest/download/Youtube-dl_GUI_Setup.exe",
                 headers={
                     "Accept": "application/octet-stream",
                     "X-GitHub-Api-Version": "2022-11-28",
@@ -102,23 +119,50 @@ class Updater:
             try:
                 response.raise_for_status()
             except requests.HTTPError as e:
-                messagebox.showerror("HTTP Error occurred", e)
+                self.master.after(
+                    0, lambda err=str(e): messagebox.showerror("HTTP Error occurred", err, parent=self.master)
+                )
                 return None
-            cd = response.headers.get("content-disposition")
+
+            tmp_dir = os.environ.get("TEMP") or os.environ.get("TMP") or os.path.expandvars("%tmp%")
+            cd = response.headers.get("content-disposition", "")
+            if "filename=" in cd:
+                name = cd[cd.index("filename=") + len("filename=") :].strip('"')
+            else:
+                name = "Youtube-dl_GUI_Setup.exe"
+            filename = os.path.join(tmp_dir, name)
+
+            length = response.headers.get("content-length")
             try:
-                filename = os.path.join(os.environ["temp"], cd[cd.index("filename=") + 9 :])
-            except KeyError:
-                filename = os.path.join(os.path.expandvars("%tmp%"), cd[cd.index("filename=") + 9 :])
-            length = int(response.headers.get("content-length"))
+                length = int(length) if length else None
+            except ValueError:
+                length = None
             downloaded = 0
+
             try:
                 with open(filename, "wb") as f:
                     for data in response.iter_content(chunk_size=524288):
                         downloaded += len(data)
                         f.write(data)
-                        self.open_window.progress["value"] = downloaded / length
-                        self.open_window.progress_text.set(f"Downloaded: {round(downloaded/length*100, 1)}%")
-                    f.close()
+                        if self.open_window is None:
+                            continue
+                        win = self.open_window
+                        if length:
+                            pct = downloaded / length
+
+                            def _update_progress(p=pct, w=win):
+                                if w is not None and w.winfo_exists():
+                                    w.progress.configure(value=p)
+                                    w.progress_text.set(f"Downloaded: {round(p * 100, 1)}%")
+
+                            win.after(0, _update_progress)
+                        else:
+
+                            def _update_bytes(d=downloaded, w=win):
+                                if w is not None and w.winfo_exists():
+                                    w.progress_text.set(f"Downloaded: {d} bytes")
+
+                            win.after(0, _update_bytes)
             except (TclError, AttributeError):
                 return None
         return filename

@@ -1,9 +1,8 @@
 wheel
-moviepy
 ttkthemes
-yt-dlp
-pyinstaller
+yt-dlp[default,curl-cffi]
 validators
 spotipy
 requests
 psutil
+mutagen

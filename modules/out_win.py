@@ -1,4 +1,5 @@
 """Provides output window class"""
+
 import threading
 from tkinter import Misc, StringVar, Text, Toplevel, font, messagebox, ttk
 from tkinter.constants import BOTH, DISABLED, FLAT, RIGHT, TOP, W, Y
@@ -21,11 +22,11 @@ class OutputWindow(Toplevel):
         title="New window",
         block=True,
         *,
-        background: str | None = None,
+        background: str = "white",
         **kwargs,
     ) -> None:
         super().__init__(master, background=background, **kwargs)
-        self.master: Application
+        self.master: Application  # type: ignore
         self.thread: threading.Thread | None = None
         self.title(title)
         self.iconbitmap(relative_path("Resources\\YTDLv2_256.ico"))
@@ -58,7 +59,7 @@ class OutputWindow(Toplevel):
 
         if self.master.app_config["prefs"]["print_log"]:
             self.out_redir = StdoutRedirect(self.out_text, interactive=False)
-            self.err_redir = StderrRedirect(self.out_text, interactive=False, master=self)
+            self.err_redir = StderrRedirect(self.out_text, interactive=False)
 
         self.protocol("WM_DELETE_WINDOW", self.win_close)
         self.focus_set()
@@ -72,10 +73,11 @@ class OutputWindow(Toplevel):
                 parent=self,
             )
             return
-        #     messagebox.showwarning("Download not stopped...", "Download logs continue in the console.", parent=self)
         self.grab_release()
-        self.out_redir.close()
-        self.err_redir.close()
+        for attr in ("out_redir", "err_redir"):
+            redir = getattr(self, attr, None)
+            if redir is not None:
+                redir.close()
         self.master.focus_set()
         self.destroy()
         log_debug("[Outwin] Closed")

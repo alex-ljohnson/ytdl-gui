@@ -1,4 +1,5 @@
 """Provides HelpWindow class"""
+
 # pylint: disable=E0611
 from tkinter import BOTH, BOTTOM, DISABLED, INSERT, TOP, Misc, Text, Toplevel, ttk
 
@@ -8,7 +9,7 @@ from modules.utils import link, relative_path
 class HelpWindow(Toplevel):
     """Toplevel window for providing help to user"""
 
-    def __init__(self, master: Misc | None = None, *, background: str = None) -> None:
+    def __init__(self, master: Misc | None = None, *, background: str = "white") -> None:
         super().__init__(master, background=background)
 
         self.title("Youtube-dl GUI - Help")
@@ -36,8 +37,8 @@ Solution - If the error box says \"retrying\", press ok and the downloader will 
             INSERT,
             """Custom format selection strings allow you to choose the way in which video+audio quality, file type, codec and more are selected in the download.
     For help with the format selection available, it is recommended that you use the button below to view the yt-dlp documentation on this subject with examples.
-    By default the format string used is isn't used, and the best available format is selected automatically based on the options selected, but would look like this:
-        b[height<=?resolution}][ext=video_format}]/w[ext=video_format}]/bv*[height<=?resolution}]+ba/b[height<=?resolution}]/wv*+ba/w""",
+    By default the format string isn't used, and the best available format is selected automatically based on the options selected, but would look like this:
+        b[height<=?{resolution}][ext={video_format}]/w[ext={video_format}]/bv*[height<=?{resolution}]+ba/b[height<=?{resolution}]/wv*+ba/w""",
         )
         custom_format_link = ttk.Button(
             custom_format_frm,

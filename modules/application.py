@@ -5,6 +5,7 @@ This also implements some additional features on top of what youtube-dl provides
 """
 
 import argparse
+import copy
 import json
 import os
 import sys
@@ -240,34 +241,33 @@ class Application(ThemedTk):
                 log_debug("[Update Check] No updates")
 
     def load_config(self):
-        # Create data path
+        def _apply_defaults(config, defaults):
+            for k, v in defaults.items():
+                if config.get(k) is None:
+                    config[k] = copy.deepcopy(v)
+                elif isinstance(v, dict):
+                    _apply_defaults(config[k], v)
+
         if not os.path.exists(DATA_PATH):
             log_debug("Creating '%appdata/Youtube-dl_GUI' folder")
             os.mkdir(DATA_PATH)
-        # Create config
         if not os.path.exists(APP_CONFIG_JSON):
             open(APP_CONFIG_JSON, "x", encoding="utf-8").close()
             log_debug("Creating 'appConfig.json'")
-        # Read config
         with open(APP_CONFIG_JSON, "r", encoding="utf-8") as f:
             try:
                 self.app_config = json.load(f)
+                if not isinstance(self.app_config, dict):
+                    print("Error in config. Setting default config...")
+                    self.app_config = {}
             except json.decoder.JSONDecodeError:
                 print("Error in config. Setting default config...")
                 self.app_config = {}
-            f.close()
-        # Check all items present
-        for k, v in DEFAULT_CONFIG.items():
-            if self.app_config.get(k, None) is None:
-                self.app_config[k] = v
-            if isinstance(v, dict):
-                for k2, v2 in v.items():
-                    if dict(self.app_config.get(k, None)).get(k2, None) is None:
-                        self.app_config[k][k2] = v2
-        # Load default
-        if self.app_config == {}:
-            self.app_config = DEFAULT_CONFIG
+        if not self.app_config:
+            self.app_config = copy.deepcopy(DEFAULT_CONFIG)
             self.write_config()
+            return
+        _apply_defaults(self.app_config, DEFAULT_CONFIG)
 
     def write_config(self):
         log_debug("[App Config] Written config", True)
@@ -280,14 +280,14 @@ class Application(ThemedTk):
         if self.ask_save() is None:
             return
         self.main_text.delete("1.0", END)
-        self.f.close()
-        self.f = None
+        if self.f is not None:
+            self.f.close()
+            self.f = None
 
-    def save(self, event=None):
+    def save(self, event=None) -> bool:
         if self.f is None:
-            self.save_as()
             log_debug("Save as from save")
-            return
+            return self.save_as()
         self.saved = True
         self.title(self.title().replace("*", ""))
         log_debug("[Data] Save")
@@ -296,9 +296,10 @@ class Application(ThemedTk):
         self.f.seek(0)
         self.f.write(s)
         self.f.flush()
-        os.fsync(self.f)
+        os.fsync(self.f.fileno())
+        return True
 
-    def save_as(self, event=None):
+    def save_as(self, event=None) -> bool:
         path = filedialog.asksaveasfilename(
             confirmoverwrite=True,
             defaultextension=".ytdl",
@@ -309,15 +310,15 @@ class Application(ThemedTk):
             title="Save As...",
             parent=self,
         )
-        if path:
-            log_debug("Save as")
-            if self.f is not None:
-                self.f.close()
-            self.f = open(path, "r+", encoding="utf-8")
-            self.title(f"Youtube-dl GUI - {path}")
-            self.save()
-        else:
+        if not path:
             log_debug("Save as cancelled")
+            return False
+        log_debug("Save as")
+        if self.f is not None:
+            self.f.close()
+        self.f = open(path, "w+", encoding="utf-8")
+        self.title(f"Youtube-dl GUI - {path}")
+        return self.save()
 
     def ask_save(self):
         """Ask user if they want to save.
@@ -332,7 +333,8 @@ class Application(ThemedTk):
             log_debug("Asking save")
             sv = messagebox.askyesnocancel("Save Changes?", "Do you want to save your changes?", parent=self)
             if sv:
-                self.save()
+                if not self.save():
+                    return None
             return sv
         else:
             log_debug("Already saved.")
@@ -373,8 +375,8 @@ class Application(ThemedTk):
             self.title(f"Youtube-dl GUI - {path}")
             self.main_text.insert("1.0", "".join(lines_in))
             self.main_text.edit_reset()
-            self.saved = False
-            self.title(f"*{self.title()}*")
+            self.main_text.edit_modified(False)
+            self.saved = True
 
     def curr_dir(self):
         messagebox.showinfo(
@@ -424,7 +426,7 @@ class Application(ThemedTk):
 
         if self.app_config["prefs"]["remove_success"]:
             ltext: list = self.main_text.get("1.0", END).split("\n")
-            copy = ltext.copy()
+            text_copy = ltext.copy()
             archive_path = relative_data("archive.txt")
             if not os.path.exists(archive_path):
                 open(archive_path, "x", encoding="utf-8").close()
@@ -436,10 +438,10 @@ class Application(ThemedTk):
             for i in ltext:
                 for x in success:
                     if x in i:
-                        copy.remove(i)
+                        text_copy.remove(i)
 
             self.main_text.delete("1.0", END)
-            self.main_text.insert("1.0", "\n".join(copy))
+            self.main_text.insert("1.0", "\n".join(text_copy))
 
     def open_time(self):
         self.time_window = TimeWindow(self, f"List Time Output - {self.app_config['dir']}", block=False)
@@ -488,14 +490,17 @@ class Application(ThemedTk):
         if ans is None:
             log_debug("Cancelled report.")
         elif ans:
-            link("https://github.com/MrTransparentBox/ytdl-gui/issues/new")
+            link("https://github.com/alex-ljohnson/ytdl-gui/issues/new")
             log_debug("Github report.")
         else:
             link("mailto:16JohnA28@gmail.com")
             log_debug("Email report.")
 
-    def font(self):
-        FontWm(my_font=self.curr_font)
+    def font(self, event=None):
+        fw = FontWm(my_font=self.curr_font)
+        fw.transient(self)
+        fw.grab_set()
+        self.wait_window(fw)
         self.font_to_list()
 
     def on_closing(self, event=None):
@@ -504,13 +509,10 @@ class Application(ThemedTk):
             sv = messagebox.askyesnocancel("Save Changes?", "Do you want to save your changes?", parent=self)
             if sv is None:
                 return
-            if sv:
-                self.save()
-            self.destroy()
-            sys.exit(0)
-        else:
-            self.destroy()
-            sys.exit(0)
+            if sv and not self.save():
+                return  # user cancelled the save-as dialog
+        self.destroy()
+        sys.exit(0)
 
     def modified(self, event=None):
         if self.saved:

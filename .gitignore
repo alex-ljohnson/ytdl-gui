@@ -2,6 +2,7 @@
 /Legacy/
 /dist/
 /.venv/
+/.venv_t/
 /.vscode/
 /CompileGUI.ps1
 /.cache
