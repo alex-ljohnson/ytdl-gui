@@ -1,4 +1,5 @@
 """Provides output window class"""
+
 import threading
 from tkinter import Misc, StringVar, Text, Toplevel, font, messagebox, ttk
 from tkinter.constants import BOTH, DISABLED, FLAT, RIGHT, TOP, W, Y
@@ -58,7 +59,7 @@ class OutputWindow(Toplevel):
 
         if self.master.app_config["prefs"]["print_log"]:
             self.out_redir = StdoutRedirect(self.out_text, interactive=False)
-            self.err_redir = StderrRedirect(self.out_text, interactive=False, master=self)
+            self.err_redir = StderrRedirect(self.out_text, interactive=False)
 
         self.protocol("WM_DELETE_WINDOW", self.win_close)
         self.focus_set()
