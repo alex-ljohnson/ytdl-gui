@@ -490,7 +490,7 @@ class Application(ThemedTk):
         if ans is None:
             log_debug("Cancelled report.")
         elif ans:
-            link("https://github.com/MrTransparentBox/ytdl-gui/issues/new")
+            link("https://github.com/alex-ljohnson/ytdl-gui/issues/new")
             log_debug("Github report.")
         else:
             link("mailto:16JohnA28@gmail.com")

@@ -13,7 +13,7 @@ class AboutWindow(Toplevel):
     def __init__(self, master: Misc | None = None, *, background: str = "white") -> None:
         super().__init__(master, background=background)
 
-        self.master: Application
+        self.master: Application  # type: ignore
         self.title("Youtube-dl GUI - About")
         self.iconbitmap(relative_path("Resources\\YTDLv2_256.ico"))
 
@@ -41,7 +41,7 @@ class AboutWindow(Toplevel):
         ttk.Label(self.main_frm, text="Github: ", justify=LEFT).grid(column=0, row=3, sticky=NW, padx=10, pady=2)
         git2_lbl = ttk.Label(
             self.main_frm,
-            text="https://github.com/MrTransparentBox/ytdl-gui",
+            text="https://github.com/alex-ljohnson/ytdl-gui",
             foreground="#00A7FF",
             font=und_fnt,
             cursor="hand2",
@@ -49,7 +49,7 @@ class AboutWindow(Toplevel):
         )
         git2_lbl.bind(
             "<Button-1>",
-            lambda e: link("https://github.com/MrTransparentBox/ytdl-gui"),
+            lambda e: link("https://github.com/alex-ljohnson/ytdl-gui"),
         )
         git2_lbl.grid(column=1, row=3, sticky=NW, padx=10, pady=2)
         ttk.Label(self.main_frm, text="Copyright © 2021 Alexander Johnson", justify=LEFT).grid(

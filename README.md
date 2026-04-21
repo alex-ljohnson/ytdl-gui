@@ -11,7 +11,7 @@ A GUI For youtube-dl. Capable of many features + spotify-youtube translation sup
 - ### Using the source code
 	Clone the repository and create a virtual env (NAMED ".venv") in the same file as [\_\_main\_\_.py](__main__.py). Install the [requirements](requirements.txt) into the environment.
 	```bash
-	git clone https://github.com/MrTransparentBox/ytdl-gui.git
+	git clone https://github.com/alex-ljohnson/ytdl-gui.git
 	cd ytdl-gui
 	python -m venv .venv
 	"./.venv/Scripts/activate"

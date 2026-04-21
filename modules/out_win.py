@@ -22,11 +22,11 @@ class OutputWindow(Toplevel):
         title="New window",
         block=True,
         *,
-        background: str | None = None,
+        background: str = "white",
         **kwargs,
     ) -> None:
         super().__init__(master, background=background, **kwargs)
-        self.master: Application
+        self.master: Application  # type: ignore
         self.thread: threading.Thread | None = None
         self.title(title)
         self.iconbitmap(relative_path("Resources\\YTDLv2_256.ico"))
