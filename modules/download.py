@@ -297,6 +297,18 @@ class Downloader:
         js_runtime = self.get_js_runtime()
         if js_runtime:
             opts["js_runtimes"] = [js_runtime]
+        else:
+            self.master.after(
+                0,
+                lambda: messagebox.showwarning(
+                    "No JavaScript runtime found",
+                    "No JavaScript runtime was found on your system.\n\n"
+                    "Downloads from sites that require JS (e.g. YouTube) may fail.\n\n"
+                    "To fix this, re-run the installer and select the QuickJS component,\n"
+                    "or install Deno, Node.js, or Bun and restart the app.",
+                    parent=self.master,
+                ),
+            )
         if self.download_options["format_string"].strip() != "":
             opts["format"] = self.download_options["format_string"]  #
             log_debug("[Format] Using custom format " + self.download_options["format_string"])
