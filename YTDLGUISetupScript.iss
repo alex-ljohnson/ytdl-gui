@@ -3,8 +3,8 @@
 
 
 #define MyAppName "Youtube-dl GUI"
-#define MyAppVersion "2026.04.22.f2"
-#define MyNumericVersion "2026.04.22.2"
+#define MyAppVersion "2026.04.21.f1"
+#define MyNumericVersion "2026.04.21.1"
 #define MyAppPublisher "TransparentBox Co."
 #define MyAppExeName "DownloaderGUI.exe"
 #define MyAppAssocName MyAppName + " File"
@@ -41,7 +41,9 @@ Compression=lzma2/max
 SolidCompression=no
 WizardStyle=modern dynamic
 ArchitecturesAllowed=win64
+#ifndef NOSIGN
 SignTool=standard
+#endif
 CloseApplications=yes
 WizardSmallImageFile=.\Resources\YTDLv2_55.bmp,.\Resources\YTDLv2_128.bmp
 WizardImageFile=.\Resources\YTDLv2_256.bmp
