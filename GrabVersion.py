@@ -1,3 +1,4 @@
+# flake8: noqa
 VSVersionInfo(
     ffi=FixedFileInfo(
         filevers=(2026, 4, 22, 2),
