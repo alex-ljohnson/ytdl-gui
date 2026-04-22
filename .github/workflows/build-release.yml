@@ -33,25 +33,25 @@ jobs:
       - name: Build with PyInstaller
         run: >
           pyinstaller --name "DownloaderGUI"
-          --version-file "GrabVersion.py"
+          --version-file "../GrabVersion.py"
           --specpath "build"
           --console
-          -i "Resources\YTDLv2_256.ico"
+          -i "../Resources/YTDLv2_256.ico"
           --hidden-import yt_dlp_ejs
           --hidden-import spotipy
           --hidden-import validators
           --hidden-import mutagen
-          --add-data "README.md;."
-          --add-data "LICENSE;."
-          --add-data "modules/extensions;modules/extensions"
-          --add-data "Info;Info"
-          --add-data "Resources;Resources"
-          --add-data "Logs;Logs"
-          --add-data "tksvg0.7;tksvg0.7"
-          --add-data "AtomicParsleyWindows;AtomicParsleyWindows"
-          --add-data "awthemes-10.3.0;awthemes-10.3.0"
-          --add-data "ffmpeg-7.1-essentials_build;ffmpeg-7.1-essentials_build"
-          --add-data "quickjs;quickjs"
+          --add-data "../README.md;."
+          --add-data "../LICENSE;."
+          --add-data "../modules/extensions;modules/extensions"
+          --add-data "../Info;Info"
+          --add-data "../Resources;Resources"
+          --add-data "../Logs;Logs"
+          --add-data "../tksvg0.7;tksvg0.7"
+          --add-data "../AtomicParsleyWindows;AtomicParsleyWindows"
+          --add-data "../awthemes-10.3.0;awthemes-10.3.0"
+          --add-data "../ffmpeg-7.1-essentials_build;ffmpeg-7.1-essentials_build"
+          --add-data "../quickjs;quickjs"
           __main__.py
 
       - name: Install Inno Setup
