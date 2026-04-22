@@ -393,7 +393,7 @@ class Application(ThemedTk):
         )
 
     def clear_archive(self):
-        with open(relative_data("archive.txt"), "w", encoding="utf-8") as f:
+        with open(relative_data("archive.txt", should_exist=False), "w", encoding="utf-8") as f:
             f.truncate(0)
             f.close()
 
@@ -427,7 +427,7 @@ class Application(ThemedTk):
         if self.app_config["prefs"]["remove_success"]:
             ltext: list = self.main_text.get("1.0", END).split("\n")
             text_copy = ltext.copy()
-            archive_path = relative_data("archive.txt")
+            archive_path = relative_data("archive.txt", should_exist=False)
             if not os.path.exists(archive_path):
                 open(archive_path, "x", encoding="utf-8").close()
             with open(archive_path, "r", encoding="utf-8") as f:

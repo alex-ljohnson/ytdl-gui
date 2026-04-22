@@ -269,9 +269,9 @@ class Downloader:
 
                 self.download_window.after(0, apply_finished)
 
-        archive_path = relative_data("archive.txt")
+        archive_path = relative_data("archive.txt", should_exist=False)
         if not os.path.exists(archive_path):
-            open(archive_path, "w", encoding="utf-8").close()  # Create archive if it doesn't exist
+            open(archive_path, "w", encoding="utf-8").close()
 
         can_embed = (
             not self.download_options["audio"] and self.download_options["video_format"] in THUMBNAIL_VIDEO_FORMATS
