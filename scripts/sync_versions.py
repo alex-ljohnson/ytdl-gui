@@ -12,6 +12,7 @@ ISS_FILE = REPO_ROOT / "YTDLGUISetupScript.iss"
 def read_app_version(path: Path = APP_PY) -> str:
     text = path.read_text(encoding="utf-8")
     m = re.search(r'^APP_VERSION\s*=\s*"([^"]+)"', text, re.MULTILINE)
+
     if not m:
         raise ValueError(f"APP_VERSION not found in {path}")
     return m.group(1)
@@ -49,12 +50,12 @@ def update_grab_version(version: str, path: Path = GRAB_VERSION) -> None:
     text = re.sub(r"prodvers=\([^)]+\)", f"prodvers={tup}", text)
     text = re.sub(
         r'(StringStruct\("FileVersion",\s*")[^"]*(")',
-        lambda m: f'{m.group(1)}{file_ver}\\0{m.group(2)}',
+        lambda m: f"{m.group(1)}{file_ver}\\0{m.group(2)}",
         text,
     )
     text = re.sub(
         r'(StringStruct\("ProductVersion",\s*")[^"]*(")',
-        lambda m: f'{m.group(1)}{prod_ver}\\0{m.group(2)}',
+        lambda m: f"{m.group(1)}{prod_ver}\\0{m.group(2)}",
         text,
     )
     path.write_text(text, encoding="utf-8")
