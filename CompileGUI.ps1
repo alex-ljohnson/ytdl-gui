@@ -1,5 +1,7 @@
 .\\.venv\\Scripts\\Activate.ps1
-$ErrorActionPreference = 'Stop' 
+$ErrorActionPreference = 'Stop'
+Write-Output "Syncing versions..."
+python scripts/sync_versions.py
 Write-Output "Removing previous build folder..."
 if (Test-Path .\\dist\\DownloaderGUI) {Remove-Item .\\dist\\DownloaderGUI -Recurse -Force}
 if (Test-Path .\\build\\DownloaderGUI) {Remove-Item .\\build\\DownloaderGUI -Recurse -Force}

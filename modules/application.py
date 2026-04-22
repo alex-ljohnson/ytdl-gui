@@ -532,23 +532,11 @@ class Application(ThemedTk):
         self.write_config()
 
 
-APP_VERSION = "2026.04.21.f1"
-NOTES = f"""Youtube-dl GUI v{APP_VERSION}
-Changes:
- - Thumbnail downloaded even if format doesn't support embedding
-Fixes:
-- Fixed download output window title
-- Removed atomic parsley usage in favour of mutagen.
-    - Binary still bundled and available for usage if added to PATH
-- Rebundled missing ffprobe
-"""
+APP_VERSION = "2026.04.22.f2"
 
 
 def main(args: argparse.Namespace):
     """Entry point for the program"""
-    if args.notes:
-        print(NOTES)
-        sys.exit(0)
     if args.path is None:
         path = None
     elif not os.path.exists(os.path.abspath(args.path)):

@@ -1,4 +1,5 @@
 """Entry point to compiled program"""
+
 import argparse
 import sys
 from tkinter import messagebox
@@ -20,7 +21,6 @@ if __name__ == "__main__":
             dest="debug",
             default=False,
         )
-        parser.add_argument("-n", "--notes", action="store_true", help="show update notes and exit", default=False)
         parser.add_argument(
             "-v",
             "--version",
