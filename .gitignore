@@ -9,7 +9,6 @@
 **/__pycache__/
 /.vs/
 .env
-/GrabVersion.py
 VersionChange.txt
 /YTDLGUISetupScript.iss
 /Youtube-dl_GUI_Setup.exe
