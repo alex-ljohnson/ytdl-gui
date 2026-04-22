@@ -4,11 +4,9 @@
 /.venv/
 /.venv_t/
 /.vscode/
-/CompileGUI.ps1
 /.cache
 **/__pycache__/
 /.vs/
 .env
 VersionChange.txt
-/YTDLGUISetupScript.iss
 /Youtube-dl_GUI_Setup.exe

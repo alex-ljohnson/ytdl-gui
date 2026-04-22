@@ -17,12 +17,12 @@ VSVersionInfo(
                     [
                         StringStruct("CompanyName", "TransparentBox Co.\0"),
                         StringStruct("FileDescription", "Start Youtube-dl GUI\0"),
-                        StringStruct("FileVersion", "2026.4.21.f1 (full)\0"),
+                        StringStruct("FileVersion", "2026.4.22.f2 (full)\0"),
                         StringStruct("InternalName", "DownloaderGUI\0"),
                         StringStruct("LegalCopyright", "\xa9 TransparentBox Co. All rights reserved.\0"),
                         StringStruct("OriginalFilename", "DownloaderGUI.Exe\0"),
                         StringStruct("ProductName", "TransparentBox Co. Youtube-dl GUI\0"),
-                        StringStruct("ProductVersion", "2026.4.21.1\0"),
+                        StringStruct("ProductVersion", "2026.4.22.2\0"),
                     ],
                 )
             ]
