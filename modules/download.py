@@ -304,7 +304,7 @@ class Downloader:
                     "No JavaScript runtime found",
                     "No JavaScript runtime was found on your system.\n\n"
                     "Downloads from sites that require JS (e.g. YouTube) may fail.\n\n"
-                    "To fix this, re-run the installer and select the QuickJS component,\n"
+                    "To fix this, manually download the installer from https://github.com/alex-ljohnson/ytdl-gui/releases/latest and select the QuickJS component when running it,\n"
                     "or install Deno, Node.js, or Bun and restart the app.",
                     parent=self.master,
                 ),
