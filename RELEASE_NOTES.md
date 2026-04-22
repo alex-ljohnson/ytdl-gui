@@ -8,4 +8,5 @@ The app automatically detects a suitable runtime on your system, checking in thi
 
 The installer includes an optional **Install QuickJS JavaScript runtime** component. It is skipped automatically if a compatible runtime is already on your PATH — you only get the bundled binary if you actually need it.
 
-No configuration is required. Runtime detection happens at download time.
+No configuration is required. Runtime detection happens at download time.  
+> **But it is recommended to manually redownload the installer or install your own JS runtime**

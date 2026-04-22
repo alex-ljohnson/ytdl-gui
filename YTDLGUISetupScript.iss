@@ -124,9 +124,13 @@ begin
   if CurPageID = wpSelectComponents then
   begin
     if FfmpegOnPath() then
-      WizardSelectComponents('!ffmpeg');
+      WizardSelectComponents('!ffmpeg')
+    else
+      WizardSelectComponents('ffmpeg');
     if JsRuntimeOnPath() then
-      WizardSelectComponents('!quickjs');
+      WizardSelectComponents('!quickjs')
+    else
+      WizardSelectComponents('quickjs');
   end;
 end;
 
