@@ -3,8 +3,8 @@
 
 
 #define MyAppName "Youtube-dl GUI"
-#define MyAppVersion "2026.04.22.f2"
-#define MyNumericVersion "2026.04.22.2"
+#define MyAppVersion "2026.04.22.f4"
+#define MyNumericVersion "2026.04.22.4"
 #define MyAppPublisher "TransparentBox Co."
 #define MyAppExeName "DownloaderGUI.exe"
 #define MyAppAssocName MyAppName + " File"
