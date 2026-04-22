@@ -532,7 +532,7 @@ class Application(ThemedTk):
         self.write_config()
 
 
-APP_VERSION = "2026.04.22.f6"
+APP_VERSION = "2026.04.22.f7"
 
 
 def main(args: argparse.Namespace):
