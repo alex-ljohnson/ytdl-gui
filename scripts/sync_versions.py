@@ -35,6 +35,7 @@ def to_numeric_version(version: str) -> str:
 
 
 def to_file_version(version: str) -> str:
+    # Windows VERSIONINFO string fields use unpadded integers, not zero-padded dates
     year, month, day, variant = version.split(".")
     return f"{int(year)}.{int(month)}.{int(day)}.{variant}"
 
@@ -79,6 +80,7 @@ def update_iss(version: str, path: Path = ISS_FILE) -> None:
 
 def main() -> None:
     version = read_app_version()
+    parse_version(version)  # validate format before touching any files
     print(f"Syncing version: {version}")
     update_grab_version(version)
     print("  Updated GrabVersion.py")
