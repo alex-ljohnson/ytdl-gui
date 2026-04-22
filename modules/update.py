@@ -98,11 +98,11 @@ class Updater:
             [
                 filename,
                 "/NOCANCEL",
-                "/RESTARTAPPLICATIONS",
                 "/SP-",
                 "/SILENT",
                 "/NOICONS",
                 "/DIR=expand:{autopf}\\Youtube-dl GUI",
+                "/launch=true",
             ]
         )
         self.master.after(0, self.master.destroy)
