@@ -68,4 +68,5 @@ jobs:
         with:
           name: Youtube-dl GUI ${{ github.ref_name }}
           files: dist/Installer/Youtube-dl_GUI_Setup.exe
+          body_path: RELEASE_NOTES.md
           generate_release_notes: true
