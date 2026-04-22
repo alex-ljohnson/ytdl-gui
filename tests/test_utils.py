@@ -195,6 +195,7 @@ def test_disable_insert_enables_inserts_then_disables():
 # link
 # ---------------------------------------------------------------------------
 
+@pytest.mark.skipif(sys.platform != "win32", reason="os.startfile is Windows-only")
 def test_link_calls_startfile(monkeypatch):
     from unittest.mock import MagicMock
     import os
