@@ -384,9 +384,10 @@ class Downloader:
             )
 
     def apply_extensions(self, lines: list[str]) -> list[str] | None:
+        lines = [i.strip() for i in lines if (s := i.strip()) and not s.startswith("#")]
         if ExtensionManager.instance is None:
             log_debug("Extension manager not initialised, skipping extension checks")
-            return [i for i in lines if not i.startswith("#")]
+            return lines
         platform_extensions = [
             e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
         ]
