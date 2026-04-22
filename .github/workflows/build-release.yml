@@ -30,6 +30,9 @@ jobs:
       - name: Sync versions from APP_VERSION
         run: python scripts/sync_versions.py
 
+      - name: Install UPX
+        run: choco install upx --yes --no-progress
+
       - name: Build with PyInstaller
         run: >
           pyinstaller --name "DownloaderGUI"
