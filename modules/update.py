@@ -1,6 +1,7 @@
 """Provides classes & functionality for the programs auto updater"""
 
 import os
+import subprocess
 import threading
 from tkinter import Misc, StringVar, TclError, Toplevel, messagebox, ttk
 from tkinter.constants import BOTTOM, CENTER, DISABLED, LEFT, NORMAL, X
@@ -93,8 +94,7 @@ class Updater:
         if self.open_window is not None:
             self.open_window.destroy()
         self.open_window = None
-        os.execv(
-            filename,
+        subprocess.Popen(
             [
                 filename,
                 "/NOCANCEL",
@@ -103,8 +103,9 @@ class Updater:
                 "/SILENT",
                 "/NOICONS",
                 "/DIR=expand:{autopf}\\Youtube-dl GUI",
-            ],
+            ]
         )
+        self.master.after(0, self.master.destroy)
 
     def download_setup(self):
         with requests.Session() as s:
