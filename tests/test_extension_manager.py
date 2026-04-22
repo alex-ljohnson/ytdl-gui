@@ -26,3 +26,18 @@ def test_extension_manager_initialises_once(monkeypatch):
     second = ExtensionManager(MagicMock())
     assert first is second
     assert len(calls) == 1
+
+
+def test_extension_manager_register(monkeypatch):
+    from modules.extension import Extension
+
+    class _Probe(Extension):
+        pass
+
+    ExtensionManager.instance = None
+    monkeypatch.setattr(ExtensionManager, "load_extensions", lambda self: None)
+    manager = ExtensionManager(MagicMock())
+    manager.extensions = {}
+    manager.register(_Probe)
+    assert "_Probe" in manager.extensions
+    assert isinstance(manager.extensions["_Probe"], _Probe)

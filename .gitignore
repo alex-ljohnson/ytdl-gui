@@ -10,3 +10,5 @@
 .env
 VersionChange.txt
 /Youtube-dl_GUI_Setup.exe
+.coverage
+htmlcov/

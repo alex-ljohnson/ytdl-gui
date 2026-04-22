@@ -1,0 +1,19 @@
+[run]
+source = modules
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+
+omit =
+    modules/about.py
+    modules/application.py
+    modules/config.py
+    modules/font_wm.py
+    modules/help.py
+    modules/options.py
+    modules/out_win.py
+    modules/preferences.py
+    modules/time_scan.py
+    modules/extensions/spotify.py
