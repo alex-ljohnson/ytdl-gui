@@ -88,9 +88,14 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 ;Filename: "{app}\README.md"; Description: "View README File"; Flags: shellexec postinstall skipifsilent skipifdoesntexist  ; Not needed automatically does this
 ;Below line allows 'Run <program name>;' Checkbox after install
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-Filename: "{app}\{#MyAppExeName}"; Check: ExpandConstant('{param:launch|false}') = 'true'; Flags: nowait
+Filename: "{app}\{#MyAppExeName}"; Check: ShouldLaunchAfterInstall; Flags: nowait
 
 [Code]
+function ShouldLaunchAfterInstall(): Boolean;
+begin
+  Result := ExpandConstant('{param:launch|false}') = 'true';
+end;
+
 function FullInstall(): Boolean;
 begin
   Result := True
