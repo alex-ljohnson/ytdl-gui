@@ -10,3 +10,6 @@ The installer includes an optional **Install QuickJS JavaScript runtime** compon
 
 No configuration is required. Runtime detection happens at download time.  
 > **But it is recommended to manually redownload the installer or install your own JS runtime**
+
+## Other
+Fixed a couple bugs relating to instability on some systems.

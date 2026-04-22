@@ -296,7 +296,8 @@ class Downloader:
         }
         js_runtime = self.get_js_runtime()
         if js_runtime:
-            opts["js_runtimes"] = [js_runtime]
+            runtime, _, path = js_runtime.partition(":")
+            opts["js_runtimes"] = {runtime: {"path": path or None}}
         else:
             self.master.after(
                 0,

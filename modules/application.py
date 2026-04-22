@@ -532,7 +532,7 @@ class Application(ThemedTk):
         self.write_config()
 
 
-APP_VERSION = "2026.04.22.f7"
+APP_VERSION = "2026.04.22.f8"
 
 
 def main(args: argparse.Namespace):
@@ -545,6 +545,7 @@ def main(args: argparse.Namespace):
         path = os.path.abspath(args.path)
     print("Loading Modules...")
     if args.debug:
+
         print(sys.argv)
         modules.constants.DEBUG = True
     app = Application("1080x600", path, APP_VERSION)
