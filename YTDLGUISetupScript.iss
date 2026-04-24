@@ -67,7 +67,8 @@ Name: "quickjs"; Description: "QuickJS runtime (JavaScript engine required for Y
 [Files]
 Source: ".\dist\DownloaderGUI\{#MyAppExeName}"; DestDir: "{app}"
 Source: ".\dist\DownloaderGUI\_internal\README.md"; DestDir: "{app}"; Flags: isreadme
-Source: ".\dist\DownloaderGUI\*"; DestDir: "{app}"; Check: FullInstall; Flags: recursesubdirs createallsubdirs; Excludes: "ffmpeg-7.1-essentials_build\*,quickjs\*"
+Source: ".\dist\DownloaderGUI\*"; DestDir: "{app}"; Check: FullInstall; Excludes: "{#MyAppExeName},ffmpeg-7.1-essentials_build\*,quickjs\*"
+Source: ".\dist\DownloaderGUI\_internal\*"; DestDir: "{app}\_internal"; Check: FullInstall; Flags: recursesubdirs createallsubdirs; Excludes: "{#MyAppExeName},ffmpeg-7.1-essentials_build\*,quickjs\*"
 Source: ".\dist\DownloaderGUI\_internal\ffmpeg-7.1-essentials_build\*"; DestDir: "{app}\_internal\ffmpeg-7.1-essentials_build"; Check: FullInstall; Components: ffmpeg; Flags: recursesubdirs createallsubdirs
 Source: ".\dist\DownloaderGUI\_internal\quickjs\*"; DestDir: "{app}\_internal\quickjs"; Check: FullInstall; Components: quickjs; Flags: recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
