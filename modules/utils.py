@@ -76,6 +76,37 @@ def relative_data(path: str, should_exist: bool = True):
     return res
 
 
+def _which(name: str) -> str | None:
+    """shutil.which that also reads the Windows registry PATH when inherited PATH misses an entry.
+
+    winget (and some installers) write to the registry PATH without updating running processes.
+    Checking the registry ensures we find tools installed after this process started.
+    """
+    result = shutil.which(name)
+    if result:
+        return result
+    if sys.platform != "win32":
+        return None
+    try:
+        import winreg
+        reg_paths: list[str] = []
+        for hive, subkey in [
+            (winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"),
+            (winreg.HKEY_CURRENT_USER, r"Environment"),
+        ]:
+            try:
+                with winreg.OpenKey(hive, subkey) as key:
+                    value, _ = winreg.QueryValueEx(key, "Path")
+                    reg_paths.append(winreg.ExpandEnvironmentStrings(value))
+            except OSError:
+                pass
+        if reg_paths:
+            return shutil.which(name, path=os.pathsep.join(reg_paths))
+    except Exception:
+        pass
+    return None
+
+
 def _bundled_ffmpeg_dir() -> str | None:
     try:
         probe = relative_path(os.path.join("ffmpeg-7.1-essentials_build", "bin", "ffprobe.exe"))
@@ -89,7 +120,7 @@ def find_ffprobe() -> str | None:
 
     Checks system PATH first, then the bundled build.
     """
-    which = shutil.which("ffprobe")
+    which = _which("ffprobe")
     if which:
         return which
     d = _bundled_ffmpeg_dir()
@@ -104,7 +135,8 @@ def find_ffmpeg_dir() -> str | None:
     Returns None when ffmpeg is on PATH (yt-dlp will use PATH automatically).
     Returns the bundled build directory otherwise.
     """
-    if shutil.which("ffmpeg"):
+    path = _which("ffmpeg")
+    if path:
         log_debug("[FFmpeg] Using system PATH")
         return None
     d = _bundled_ffmpeg_dir()

@@ -96,32 +96,32 @@ from modules.utils import find_ffprobe, find_ffmpeg_dir
 
 class TestFindFfprobe:
     def test_system_path_takes_priority(self, monkeypatch):
-        monkeypatch.setattr("modules.utils.shutil.which", lambda x: "/usr/bin/ffprobe" if x == "ffprobe" else None)
+        monkeypatch.setattr("modules.utils._which", lambda x: "/usr/bin/ffprobe" if x == "ffprobe" else None)
         assert find_ffprobe() == "/usr/bin/ffprobe"
 
     def test_bundled_fallback(self, monkeypatch):
-        monkeypatch.setattr("modules.utils.shutil.which", lambda x: None)
+        monkeypatch.setattr("modules.utils._which", lambda x: None)
         monkeypatch.setattr("modules.utils._bundled_ffmpeg_dir", lambda: "/bundled/bin")
         assert find_ffprobe() == os.path.join("/bundled/bin", "ffprobe.exe")
 
     def test_not_found_returns_none(self, monkeypatch):
-        monkeypatch.setattr("modules.utils.shutil.which", lambda x: None)
+        monkeypatch.setattr("modules.utils._which", lambda x: None)
         monkeypatch.setattr("modules.utils._bundled_ffmpeg_dir", lambda: None)
         assert find_ffprobe() is None
 
 
 class TestFindFfmpegDir:
     def test_system_ffmpeg_returns_none(self, monkeypatch):
-        monkeypatch.setattr("modules.utils.shutil.which", lambda x: "/usr/bin/ffmpeg" if x == "ffmpeg" else None)
+        monkeypatch.setattr("modules.utils._which", lambda x: "/usr/bin/ffmpeg" if x == "ffmpeg" else None)
         assert find_ffmpeg_dir() is None
 
     def test_bundled_fallback(self, monkeypatch):
-        monkeypatch.setattr("modules.utils.shutil.which", lambda x: None)
+        monkeypatch.setattr("modules.utils._which", lambda x: None)
         monkeypatch.setattr("modules.utils._bundled_ffmpeg_dir", lambda: "/bundled/bin")
         assert find_ffmpeg_dir() == "/bundled/bin"
 
     def test_not_found_returns_none(self, monkeypatch):
-        monkeypatch.setattr("modules.utils.shutil.which", lambda x: None)
+        monkeypatch.setattr("modules.utils._which", lambda x: None)
         monkeypatch.setattr("modules.utils._bundled_ffmpeg_dir", lambda: None)
         assert find_ffmpeg_dir() is None
 
