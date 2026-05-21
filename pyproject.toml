@@ -1,0 +1,29 @@
+[project]
+name = "ytdl-gui"
+version = "2026.04.22.8"
+description = "A user-friendly GUI for yt-dlp, allowing you to easily download videos and playlists from various platforms."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "brotli",
+    "mutagen>=1.47.0",
+    "psutil>=7.2.2",
+    "requests>=2.34.2",
+    "spotipy>=2.26.0",
+    "ttkthemes>=3.3.0",
+    "validators>=0.35.0",
+    "wheel>=0.47.0",
+    "yt-dlp-ejs>=0.8.0",
+    "yt-dlp[curl-cffi,default]>=2026.3.17",
+]
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.20.0",
+    "pytest>=8.0",
+    "pytest-cov>=7.1.0",
+    "pytest-mock>=3.12",
+]
+
+[tool.uv.sources]
+brotli = { git = "https://github.com/google/brotli" }

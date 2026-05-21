@@ -7,6 +7,7 @@ REPO_ROOT = Path(__file__).parent.parent
 APP_PY = REPO_ROOT / "modules" / "application.py"
 GRAB_VERSION = REPO_ROOT / "GrabVersion.py"
 ISS_FILE = REPO_ROOT / "YTDLGUISetupScript.iss"
+UV_PROJECT_FILE = REPO_ROOT / "pyproject.toml"
 
 
 def read_app_version(path: Path = APP_PY) -> str:
@@ -73,6 +74,17 @@ def update_iss(version: str, path: Path = ISS_FILE) -> None:
     text = re.sub(
         r'(#define MyNumericVersion\s+")[^"]+"',
         lambda m: f'{m.group(1)}{numeric}"',
+        text,
+    )
+    path.write_text(text, encoding="utf-8")
+
+
+def update_pyproject(version: str, path: Path = UV_PROJECT_FILE) -> None:
+    numeric = to_numeric_version(version)
+    text = path.read_text(encoding="utf-8")
+    text = re.sub(
+        r'(^version\s*=\s*")[^"]+(")',
+        lambda m: f"{m.group(1)}{numeric}{m.group(2)}",
         text,
     )
     path.write_text(text, encoding="utf-8")

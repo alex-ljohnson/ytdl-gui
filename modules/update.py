@@ -164,7 +164,7 @@ class Updater:
                                     w.progress_text.set(f"Downloaded: {d} bytes")
 
                             win.after(0, _update_bytes)
-            except (TclError, AttributeError):
+            except TclError, AttributeError:
                 return None
         return filename
 
