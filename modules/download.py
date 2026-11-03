@@ -2,9 +2,10 @@
 
 import os
 import threading
+from collections.abc import Callable
 from tkinter import Misc, messagebox
 from tkinter.constants import END
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from yt_dlp import YoutubeDL
 
@@ -30,8 +31,10 @@ if TYPE_CHECKING:
 class Downloader:
     """Provides functionality for file downloading"""
 
-    def __init__(self, download_options: dict, output_directory: str, master: "Application") -> None:
-        self.master: "Application" = master
+    def __init__(
+        self, download_options: dict, output_directory: str, master: Application
+    ) -> None:
+        self.master: Application = master
         self.download_options = download_options
         self.output_directory = output_directory
         self.download_window = None
@@ -78,7 +81,9 @@ class Downloader:
                 (
                     f
                     for f in formats
-                    if f.get("acodec", "none") != "none" and f.get("vcodec", "none") == "none" and f["ext"] == audio_ext
+                    if f.get("acodec", "none") != "none"
+                    and f.get("vcodec", "none") == "none"
+                    and f["ext"] == audio_ext
                 ),
                 None,
             )
@@ -87,7 +92,9 @@ class Downloader:
                     (
                         f
                         for f in formats
-                        if f.get("acodec", "none") != "none" and f.get("vcodec", "none") == "none" and f["ext"] == "m4a"
+                        if f.get("acodec", "none") != "none"
+                        and f.get("vcodec", "none") == "none"
+                        and f["ext"] == "m4a"
                     ),
                     None,
                 )
@@ -158,7 +165,8 @@ class Downloader:
                         (
                             f
                             for f in formats[::-1]
-                            if f.get("vcodec", "none") != "none" and f.get("acodec", "none") == "none"
+                            if f.get("vcodec", "none") != "none"
+                            and f.get("acodec", "none") == "none"
                         ),
                         None,
                     )
@@ -167,7 +175,8 @@ class Downloader:
                         (
                             f
                             for f in formats[::-1]
-                            if f.get("vcodec", "none") != "none" and f.get("acodec", "none") != "none"
+                            if f.get("vcodec", "none") != "none"
+                            and f.get("acodec", "none") != "none"
                         ),
                         None,
                     )
@@ -191,7 +200,12 @@ class Downloader:
                     )
                 elif not has_audio:
                     best_audio = next(
-                        (f for f in formats if f.get("acodec", "none") != "none" and f.get("vcodec", "none") == "none"),
+                        (
+                            f
+                            for f in formats
+                            if f.get("acodec", "none") != "none"
+                            and f.get("vcodec", "none") == "none"
+                        ),
                         None,
                     )
 
@@ -201,20 +215,20 @@ class Downloader:
                     )
                     # These are the minimum required fields for a merged format
                     yield {
-                        "format_id": f'{best_video["format_id"]}+{best_audio["format_id"]}',
+                        "format_id": f"{best_video['format_id']}+{best_audio['format_id']}",
                         "ext": best_video["ext"],
                         "requested_formats": [best_video, best_audio],
-                        "protocol": f'{best_video["protocol"]}+{best_audio["protocol"]}',
+                        "protocol": f"{best_video['protocol']}+{best_audio['protocol']}",
                     }
                 elif best_audio is not None:
                     print(
                         f"[Format Selection] Merging {best_video['ext']} ({best_video.get('format_note', 'Empty')}) and {best_audio['ext']} ({best_audio.get('format_note', 'Empty')}) into mkv"
                     )
                     yield {
-                        "format_id": f'{best_video["format_id"]}+{best_audio["format_id"]}',
+                        "format_id": f"{best_video['format_id']}+{best_audio['format_id']}",
                         "ext": "mkv",
                         "requested_formats": [best_video, best_audio],
-                        "protocol": f'{best_video["protocol"]}+{best_audio["protocol"]}',
+                        "protocol": f"{best_video['protocol']}+{best_audio['protocol']}",
                     }
 
                 else:
@@ -235,7 +249,11 @@ class Downloader:
             status = d.get("status")
             if status == "downloading":
                 total_bytes = d.get("total_bytes")
-                total = total_bytes if total_bytes is not None else (d.get("total_bytes_estimate") or 0)
+                total = (
+                    total_bytes
+                    if total_bytes is not None
+                    else (d.get("total_bytes_estimate") or 0)
+                )
                 downloaded = d.get("downloaded_bytes", 0)
                 pct_str = d.get("_percent_str")
                 stat_str = d.get("_default_template")
@@ -263,8 +281,12 @@ class Downloader:
                     if self.download_window is None:
                         return
                     self.download_window.progress["value"] = 0
-                    self.download_window.percent.set("Download Complete! - Finishing up")
-                    self.download_window.stat_string.set(f"{total_str}/{total_str} @ 0MiB/s")
+                    self.download_window.percent.set(
+                        "Download Complete! - Finishing up"
+                    )
+                    self.download_window.stat_string.set(
+                        f"{total_str}/{total_str} @ 0MiB/s"
+                    )
 
                 self.download_window.after(0, apply_finished)
 
@@ -273,8 +295,12 @@ class Downloader:
             open(archive_path, "w", encoding="utf-8").close()
 
         can_embed = (
-            not self.download_options["audio"] and self.download_options["video_format"] in THUMBNAIL_VIDEO_FORMATS
-        ) or (self.download_options["audio"] and self.download_options["audio_format"] in THUMBNAIL_AUDIO_FORMATS)
+            not self.download_options["audio"]
+            and self.download_options["video_format"] in THUMBNAIL_VIDEO_FORMATS
+        ) or (
+            self.download_options["audio"]
+            and self.download_options["audio_format"] in THUMBNAIL_AUDIO_FORMATS
+        )
         opts = {
             "default_search": "auto",
             "outtmpl": f"{self.output_directory}\\%(title)s-%(uploader)s-%(upload_date)s.%(ext)s",
@@ -304,14 +330,16 @@ class Downloader:
                     "No JavaScript runtime found",
                     "No JavaScript runtime was found on your system.\n\n"
                     "Downloads from sites that require JS (e.g. YouTube) may fail.\n\n"
-                    "To fix this, manually download the installer from https://github.com/alex-ljohnson/ytdl-gui/releases/latest and select the QuickJS component when running it,\n"
-                    "or install Deno, Node.js, or Bun and restart the app.",
+                    "To fix this, install Deno, Node.js or Bun, "
+                    "or choose a runtime you already have in Help > Dependencies...",
                     parent=self.master,
                 ),
             )
         if self.download_options["format_string"].strip() != "":
-            opts["format"] = self.download_options["format_string"]  #
-            log_debug("[Format] Using custom format " + self.download_options["format_string"])
+            opts["format"] = self.download_options["format_string"]
+            log_debug(
+                "[Format] Using custom format " + self.download_options["format_string"]
+            )
         # elif self.appConfig['opts']['audio']:
         #     opts['format'] = f"ba[ext={self.appConfig['opts']['audio_format']}]/ba"
         #     if self.appConfig['opts']['audio_format'] == "best":
@@ -326,7 +354,10 @@ class Downloader:
             log_debug(opts["outtmpl"])
         if self.download_options["audio_post"]:
             opts["postprocessors"].append(
-                {"key": "FFmpegExtractAudio", "preferredcodec": self.download_options["audio_format"]}
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": self.download_options["audio_format"],
+                }
             )
         if self.download_options["metadata"]:
             opts["postprocessors"].append({"key": "FFmpegMetadata"})
@@ -341,7 +372,9 @@ class Downloader:
                 )
                 log_debug("Added thumbnail postprocess")
             else:
-                print("Chosen format doesn't support thumbnail embedding, leaving file on disk")
+                print(
+                    "Chosen format doesn't support thumbnail embedding, leaving file on disk"
+                )
         if self.download_options["subtitles"]:
             opts["postprocessors"].append({"key": "FFmpegEmbedSubtitle"})
         if not self.master.app_config["prefs"]["disable_stats"]:
@@ -381,13 +414,17 @@ class Downloader:
         self.running = False
         if ExtensionManager.instance is not None:
             download_extensions = [
-                e for e in ExtensionManager.instance.extensions.values() if isinstance(e, DownloadExtension)
+                e
+                for e in ExtensionManager.instance.extensions.values()
+                if isinstance(e, DownloadExtension)
             ]
             for extension in download_extensions:
                 if extension.ready:
                     extension.download_finished(items)
         if self.download_window is not None:
-            self.download_window.percent.set("All videos downloaded successfully (window may be closed)")
+            self.download_window.percent.set(
+                "All videos downloaded successfully (window may be closed)"
+            )
             print("Process finished successfully\nWindow may be closed...", end="")
             messagebox.showinfo(
                 "Download finished",
@@ -401,10 +438,14 @@ class Downloader:
             log_debug("Extension manager not initialised, skipping extension checks")
             return lines
         platform_extensions = [
-            e for e in ExtensionManager.instance.extensions.values() if isinstance(e, PlatformExtension)
+            e
+            for e in ExtensionManager.instance.extensions.values()
+            if isinstance(e, PlatformExtension)
         ]
         download_extensions = [
-            e for e in ExtensionManager.instance.extensions.values() if isinstance(e, DownloadExtension)
+            e
+            for e in ExtensionManager.instance.extensions.values()
+            if isinstance(e, DownloadExtension)
         ]
         items: list[str] = []
         for i in lines:

@@ -24,6 +24,7 @@ from modules.constants import (
     DEFAULT_CONFIG,
     ENABLED_THEMES,
 )
+from modules.dependencies import DependenciesWindow
 from modules.download import Downloader
 from modules.extension import ExtensionManager, ExtensionWindow
 from modules.font_wm import FontWm
@@ -64,13 +65,16 @@ class Application(ThemedTk):
         self.path = path
         self.app_version = version_info
         self.updater = Updater(self.app_version, self)
-        self.downloader = Downloader(self.app_config["opts"], self.app_config["dir"], self)
+        self.downloader = Downloader(
+            self.app_config["opts"], self.app_config["dir"], self
+        )
         self.time_window = None
         self.help_window = None
         self.about_window = None
         self.options_window = None
         self.prefs_window = None
         self.extension_window = None
+        self.dependencies_window = None
 
         # Load themes
         self.tk.call("lappend", "auto_path", relative_path("awthemes-10.3.0"))
@@ -96,21 +100,27 @@ class Application(ThemedTk):
             self.path = relative_data("ToDownload.ytdl", False)
             log_debug("Loading default .ytdl", True)
             if not os.path.exists(self.path):
-                open(self.path, "x", encoding="utf-8").close()  # Create if it doesn't exist
+                open(
+                    self.path, "x", encoding="utf-8"
+                ).close()  # Create if it doesn't exist
                 log_debug("Creating ToDownload.ytdl")
         elif not (
             os.path.exists(self.path)
             and os.path.isfile(self.path)
             and (str(self.path).endswith(".ytdl") or str(self.path).endswith(".vdl"))
         ):
-            raise OSError("File specified must be an existing file of type .ytdl (or .vdl for legacy files)")
+            raise OSError(
+                "File specified must be an existing file of type .ytdl (or .vdl for legacy files)"
+            )
 
         if str(self.app_config["dir"]).strip() == "":
             messagebox.showinfo(
                 "No download target selected",
                 "Please select a folder to download your files into.",
             )
-            ans = filedialog.askdirectory(parent=self, title="Select Download Directory...")
+            ans = filedialog.askdirectory(
+                parent=self, title="Select Download Directory..."
+            )
             if ans.strip() == "":
                 sys.exit("No Directory given...")
             else:
@@ -122,7 +132,7 @@ class Application(ThemedTk):
             if list(self.app_config["enabled_extensions"]).__contains__(name):
                 extension.enable()
 
-        self.title(f"Youtube-dl GUI - {str(self.app_config['dir'])}")
+        self.title(f"Youtube-dl GUI - {self.app_config['dir']!s}")
         self.iconbitmap(relative_path("Resources\\YTDLv2_256.ico"))
         self.geometry(size)
         self.saved = True
@@ -141,7 +151,9 @@ class Application(ThemedTk):
         ttk.Frame(self.btn_frm).grid(row=0, column=0)
         mid = ttk.Frame(self.btn_frm)
         mid.grid(row=0, column=1)
-        self.yt_button = ttk.Button(mid, text="Start Download...", command=self.open_download)
+        self.yt_button = ttk.Button(
+            mid, text="Start Download...", command=self.open_download
+        )
         self.time_button = ttk.Button(mid, text="List Time...", command=self.open_time)
         self.yt_button.grid(row=0, column=0, padx=3, pady=5)
         self.time_button.grid(row=0, column=1, padx=3, pady=5)
@@ -164,14 +176,18 @@ class Application(ThemedTk):
         self.y_scroll.config(command=self.main_text.yview)
         self.x_scroll.config(command=self.main_text.xview)
         self.f = open(self.path, "r+", encoding="utf-8")
-        log_debug(f"[File IO] Opened file {self.f.name} || Encoding is {self.f.encoding}")
+        log_debug(
+            f"[File IO] Opened file {self.f.name} || Encoding is {self.f.encoding}"
+        )
         try:
             self.f.seek(0)
             lines_in = self.f.readlines()
             log_debug(f"[File IO] Read {lines_in} from {self.f.name}")
         except UnicodeDecodeError:
             lines_in = [""]
-            messagebox.showerror("Bad encoding", "The encoding of the file isn't supported", parent=self)
+            messagebox.showerror(
+                "Bad encoding", "The encoding of the file isn't supported", parent=self
+            )
         if len(lines_in) > 0:
             if lines_in[-1][-1:] == "\n":
                 lines_in[-1] = lines_in[-1][:-1]
@@ -190,15 +206,21 @@ class Application(ThemedTk):
         self.file_menu.add_command(label="New (CTRL+N)", command=self.new)
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Save (CTRL+S)", command=self.save)
-        self.file_menu.add_command(label="Save As (CTRL+SHIFT+S)...", command=self.save_as)
+        self.file_menu.add_command(
+            label="Save As (CTRL+SHIFT+S)...", command=self.save_as
+        )
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Open (CTRL+O)...", command=self.open)
         self.file_menu.add_separator()
         self.file_menu.add_command(label="Preferences...", command=self.open_prefs)
 
         self.edit_menu = Menu(self.menu, tearoff=0)
-        self.edit_menu.add_command(label="Undo (CTRL+Z)", command=self.main_text.edit_undo)
-        self.edit_menu.add_command(label="Redo (CTRL+Y)", command=self.main_text.edit_redo)
+        self.edit_menu.add_command(
+            label="Undo (CTRL+Z)", command=self.main_text.edit_undo
+        )
+        self.edit_menu.add_command(
+            label="Redo (CTRL+Y)", command=self.main_text.edit_redo
+        )
 
         self.view_menu = Menu(self.menu, tearoff=0)
         self.view_menu.add_command(label="Font...", command=self.font)
@@ -209,16 +231,27 @@ class Application(ThemedTk):
         self.tool_menu.add_command(label="Change Directory...", command=self.change_dir)
         self.tool_menu.add_command(label="Clear archive", command=self.clear_archive)
         self.tool_menu.add_separator()
-        self.tool_menu.add_command(label="Download Options...", command=self.open_options)
+        self.tool_menu.add_command(
+            label="Download Options...", command=self.open_options
+        )
         self.tool_menu.add_separator()
-        self.tool_menu.add_command(label="Manage extensions...", command=self.open_extensions)
+        self.tool_menu.add_command(
+            label="Manage extensions...", command=self.open_extensions
+        )
 
         self.help_menu = Menu(self.menu, tearoff=0)
-        self.help_menu.add_command(label="About Youtube-dl GUI", command=self.open_about)
+        self.help_menu.add_command(
+            label="About Youtube-dl GUI", command=self.open_about
+        )
         self.help_menu.add_command(label="Help & Instructions", command=self.open_help)
+        self.help_menu.add_command(
+            label="Dependencies...", command=self.open_dependencies
+        )
         self.help_menu.add_separator()
         self.help_menu.add_command(label="Report Bug", command=self.bug)
-        self.help_menu.add_command(label="Check for updates...", command=self.updater.check_update)
+        self.help_menu.add_command(
+            label="Check for updates...", command=self.updater.check_update
+        )
 
         self.menu.add_cascade(label="File", menu=self.file_menu, underline=0)
         self.menu.add_cascade(label="Edit", menu=self.edit_menu, underline=0)
@@ -331,7 +364,9 @@ class Application(ThemedTk):
             None: if cancel is selected"""
         if not self.saved:
             log_debug("Asking save")
-            sv = messagebox.askyesnocancel("Save Changes?", "Do you want to save your changes?", parent=self)
+            sv = messagebox.askyesnocancel(
+                "Save Changes?", "Do you want to save your changes?", parent=self
+            )
             if sv:
                 if not self.save():
                     return None
@@ -393,7 +428,9 @@ class Application(ThemedTk):
         )
 
     def clear_archive(self):
-        with open(relative_data("archive.txt", should_exist=False), "w", encoding="utf-8") as f:
+        with open(
+            relative_data("archive.txt", should_exist=False), "w", encoding="utf-8"
+        ) as f:
             f.truncate(0)
             f.close()
 
@@ -402,10 +439,12 @@ class Application(ThemedTk):
         if ans.strip() != "":
             self.app_config["dir"] = os.path.abspath(ans)
         self.write_config()
-        self.title(f"Youtube-dl GUI - {str(self.app_config['dir'])}")
+        self.title(f"Youtube-dl GUI - {self.app_config['dir']!s}")
 
     def open_download(self):
-        self.downloader = Downloader(self.app_config["opts"], self.app_config["dir"], self)
+        self.downloader = Downloader(
+            self.app_config["opts"], self.app_config["dir"], self
+        )
         self.downloader.open_download()
 
         lines = []
@@ -444,24 +483,42 @@ class Application(ThemedTk):
             self.main_text.insert("1.0", "\n".join(text_copy))
 
     def open_time(self):
-        self.time_window = TimeWindow(self, f"List Time Output - {self.app_config['dir']}", block=False)
+        self.time_window = TimeWindow(
+            self, f"List Time Output - {self.app_config['dir']}", block=False
+        )
         log_debug("Created time win")
         self.time_window.task()
 
     def open_about(self):
-        self.about_window = AboutWindow(self, background=BACKGROUNDS[self.app_config["prefs"]["theme"]])
+        self.about_window = AboutWindow(
+            self, background=BACKGROUNDS[self.app_config["prefs"]["theme"]]
+        )
 
     def open_help(self):
-        self.help_window = HelpWindow(self, background=BACKGROUNDS[self.app_config["prefs"]["theme"]])
+        self.help_window = HelpWindow(
+            self, background=BACKGROUNDS[self.app_config["prefs"]["theme"]]
+        )
 
     def open_options(self):
         self.options_window = OptionsWindow(self)
 
     def open_prefs(self):
-        self.prefs_window = PreferenceWindow(self, background=BACKGROUNDS[self.app_config["prefs"]["theme"]])
+        self.prefs_window = PreferenceWindow(
+            self, background=BACKGROUNDS[self.app_config["prefs"]["theme"]]
+        )
+
+    def open_dependencies(self):
+        if self.dependencies_window is not None:
+            self.dependencies_window.lift()
+            return
+        self.dependencies_window = DependenciesWindow(
+            self, background=BACKGROUNDS[self.app_config["prefs"]["theme"]]
+        )
 
     def open_extensions(self):
-        self.extension_window = ExtensionWindow(self, background=BACKGROUNDS[self.app_config["prefs"]["theme"]])
+        self.extension_window = ExtensionWindow(
+            self, background=BACKGROUNDS[self.app_config["prefs"]["theme"]]
+        )
 
     def update_theme(self, theme):
         ttk.Style().theme_use(theme)
@@ -480,6 +537,8 @@ class Application(ThemedTk):
             self.time_window.config(bg=BACKGROUNDS[theme])
         if self.prefs_window is not None:
             self.prefs_window.config(bg=BACKGROUNDS[theme])
+        if self.dependencies_window is not None:
+            self.dependencies_window.config(bg=BACKGROUNDS[theme])
 
     def bug(self):
         ans = messagebox.askyesnocancel(
@@ -506,7 +565,9 @@ class Application(ThemedTk):
     def on_closing(self, event=None):
         self.font_to_list()
         if not self.saved:
-            sv = messagebox.askyesnocancel("Save Changes?", "Do you want to save your changes?", parent=self)
+            sv = messagebox.askyesnocancel(
+                "Save Changes?", "Do you want to save your changes?", parent=self
+            )
             if sv is None:
                 return
             if sv and not self.save():
@@ -545,7 +606,6 @@ def main(args: argparse.Namespace):
         path = os.path.abspath(args.path)
     print("Loading Modules...")
     if args.debug:
-
         print(sys.argv)
         modules.constants.DEBUG = True
     app = Application("1080x600", path, APP_VERSION)
