@@ -1,7 +1,6 @@
 """Static utility functions for the program"""
 
 import os
-import shutil
 import sys
 from tkinter import DISABLED, NORMAL, Text
 
@@ -75,99 +74,3 @@ def relative_data(path: str, should_exist: bool = True):
     log_debug(f"[File] Path {str(res)} found")
     return res
 
-
-def _which(name: str) -> str | None:
-    """shutil.which that also reads the Windows registry PATH when inherited PATH misses an entry.
-
-    winget (and some installers) write to the registry PATH without updating running processes.
-    Checking the registry ensures we find tools installed after this process started.
-    """
-    result = shutil.which(name)
-    if result:
-        return result
-    if sys.platform != "win32":
-        return None
-    try:
-        import winreg
-        reg_paths: list[str] = []
-        for hive, subkey in [
-            (winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"),
-            (winreg.HKEY_CURRENT_USER, r"Environment"),
-        ]:
-            try:
-                with winreg.OpenKey(hive, subkey) as key:
-                    value, _ = winreg.QueryValueEx(key, "Path")
-                    reg_paths.append(winreg.ExpandEnvironmentStrings(value))
-            except OSError:
-                pass
-        if reg_paths:
-            return shutil.which(name, path=os.pathsep.join(reg_paths))
-    except Exception:
-        pass
-    return None
-
-
-def _bundled_ffmpeg_dir() -> str | None:
-    try:
-        probe = relative_path(os.path.join("ffmpeg-7.1-essentials_build", "bin", "ffprobe.exe"))
-        return os.path.dirname(probe)
-    except FileNotFoundError:
-        return None
-
-
-def find_ffprobe() -> str | None:
-    """Return the absolute path to ffprobe, or None if not found.
-
-    Checks system PATH first, then the bundled build.
-    """
-    which = _which("ffprobe")
-    if which:
-        return which
-    d = _bundled_ffmpeg_dir()
-    if d:
-        return os.path.join(d, "ffprobe.exe")
-    return None
-
-
-def find_ffmpeg_dir() -> str | None:
-    """Return the ffmpeg directory for yt-dlp's ffmpeg_location.
-
-    Returns None when ffmpeg is on PATH (yt-dlp will use PATH automatically).
-    Returns the bundled build directory otherwise.
-    """
-    path = _which("ffmpeg")
-    if path:
-        log_debug("[FFmpeg] Using system PATH")
-        return None
-    d = _bundled_ffmpeg_dir()
-    if d:
-        log_debug(f"[FFmpeg] Using bundled build: {d}")
-        return d
-    log_debug("[FFmpeg] No ffmpeg found")
-    return None
-
-
-def _bundled_quickjs() -> str | None:
-    try:
-        return relative_path(os.path.join("quickjs", "qjs.exe"))
-    except FileNotFoundError:
-        return None
-
-
-def find_js_runtime() -> str | None:
-    """Return the JS runtime specifier for yt-dlp, or None if not found.
-
-    Checks system PATH in priority order (deno → bun → node → qjs),
-    then falls back to the bundled QuickJS build. Returns ``"quickjs:path"``
-    for the bundled case so yt-dlp can locate the executable.
-    """
-    for name in ("deno", "bun", "node", "qjs"):
-        if shutil.which(name):
-            log_debug(f"[JSRuntime] Using system {name}")
-            return name if name != "qjs" else "quickjs"
-    path = _bundled_quickjs()
-    if path:
-        log_debug(f"[JSRuntime] Using bundled QuickJS: {path}")
-        return f"quickjs:{path}"
-    log_debug("[JSRuntime] No JS runtime found")
-    return None

@@ -51,11 +51,18 @@ def test_folder_length_processes_each_file_exactly_once(sample_folder):
 # ---------------------------------------------------------------------------
 
 def test_folder_length_when_ffprobe_missing(tmp_path, monkeypatch):
-    monkeypatch.setattr("modules.get_stats.find_ffprobe", lambda: None)
+    monkeypatch.setattr("modules.get_stats.find_ffprobe", lambda custom: None)
     s = GetStats(str(tmp_path), quiet=True, silent=True)
     result = s.folder_length()
     assert s._ffprobe is None
     assert result == {"hours": 0, "minutes": 0, "seconds": 0}
+
+
+def test_folder_length_passes_custom_ffmpeg(tmp_path, monkeypatch):
+    seen = []
+    monkeypatch.setattr("modules.get_stats.find_ffprobe", lambda custom: seen.append(custom))
+    GetStats(str(tmp_path), quiet=True, silent=True, ffmpeg_custom="/opt/ffmpeg").folder_length()
+    assert seen == ["/opt/ffmpeg"]
 
 
 # ---------------------------------------------------------------------------

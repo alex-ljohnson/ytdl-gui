@@ -1,4 +1,5 @@
 """Provides the window for time duration scans"""
+
 import threading
 from tkinter import messagebox
 from tkinter.constants import END
@@ -27,7 +28,10 @@ class TimeWindow(OutputWindow):
         super().__init__(master, title, block, background=background, **kwargs)
 
         self.master: Application
-        self.stats = GetStats(self.master.app_config["dir"])
+        self.stats = GetStats(
+            self.master.app_config["dir"],
+            ffmpeg_custom=self.master.app_config["tools"]["ffmpeg"],
+        )
 
     def start_scan(self):
         self.out_text.delete("1.0", END)

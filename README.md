@@ -19,7 +19,7 @@ Clone the repository and create a virtual env (NAMED ".venv") in the same file a
 	pip install -r requirement.txt
 ```
 #### Dependencies
-- Minimum python version: `3.10` (type unions)
+- Minimum python version: `3.14`
 
 
 ## Using the program

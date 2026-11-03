@@ -10,8 +10,7 @@ pyinstaller.exe --name "DownloaderGUI" --version-file "..\\GrabVersion.py" --spe
 --add-data '../README.md;.' --add-data '../LICENSE;.' `
 --add-data '../modules/extensions;modules/extensions' `
 --add-data '../Info;Info' --add-data '../Resources;Resources' --add-data '../Logs;Logs' `
---add-data '../tksvg0.7;tksvg0.7' --add-data '../AtomicParsleyWindows;AtomicParsleyWindows' --add-data '../awthemes-10.3.0;awthemes-10.3.0' `
---add-data '../ffmpeg-7.1-essentials_build;ffmpeg-7.1-essentials_build' `
---add-data '../quickjs;quickjs' `
+--add-data '../tksvg0.7;tksvg0.7' --add-data '../awthemes-10.3.0;awthemes-10.3.0' `
+--add-data '../tools;tools' `
 .\__main__.py
 exit

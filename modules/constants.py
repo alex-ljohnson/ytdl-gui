@@ -7,6 +7,11 @@ DEBUG = False
 DEFAULT_CONFIG: dict = {
     "dir": "",
     "enabled_extensions": [],
+    # custom tool locations, empty means search PATH then the bundled copy
+    "tools": {
+        "ffmpeg": "",
+        "js_runtime": "",
+    },
     "prefs": {
         "font": ["Arial", 14, "normal", "roman", 0, 0],
         "parallel": False,

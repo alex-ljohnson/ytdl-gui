@@ -1,9 +1,8 @@
 import json
 import os
-import subprocess
 import threading
 
-from modules.utils import find_ffprobe
+from modules.tools import find_ffprobe, run_tool
 
 
 class GetStats:
@@ -19,9 +18,12 @@ class GetStats:
       If True, suppresses non-vital messages
 
     silent: bool
-      If True, suppresses all messages"""
+      If True, suppresses all messages
 
-    def __init__(self, pathname, quiet=False, silent=False):
+    ffmpeg_custom: str
+      The user's custom ffmpeg location, ffprobe is taken from the same folder"""
+
+    def __init__(self, pathname, quiet=False, silent=False, ffmpeg_custom=""):
         self.pathname = os.path.realpath(os.path.expandvars(pathname))
         self.quiet = quiet
         self.silent = silent
@@ -29,12 +31,16 @@ class GetStats:
         self.__dots__ = 0
         self._tot_lock = threading.Lock()
         self._ffprobe: str | None = None
+        self.ffmpeg_custom = ffmpeg_custom
 
     def write(self, text: str, importance=0, long=0):
         stages = ["|", "/", "-", "\\"]
-        if not self.quiet or (importance == 1 and self.silent == False):
-            print(text)
-        elif self.silent and importance > 1:
+        if (
+            not self.quiet
+            or (importance == 1 and self.silent == False)
+            or self.silent
+            and importance > 1
+        ):
             print(text)
         elif self.silent and importance <= 1:
             pass
@@ -43,16 +49,23 @@ class GetStats:
             print("Processing", end="")
         elif self.quiet and long == 2:
             self.__dots__ += 1
-            print(f"\rProcessing  {stages[self.__dots__%4]}", end="")
+            print(f"\rProcessing  {stages[self.__dots__ % 4]}", end="")
 
     def get_length(self, filename) -> float | None:
         if not os.path.exists(filename) or self._ffprobe is None:
             return None
         try:
-            result = subprocess.run(
-                [self._ffprobe, "-v", "error", "-show_entries", "format=duration", "-of", "json", filename],
-                capture_output=True,
-                text=True,
+            result = run_tool(
+                [
+                    self._ffprobe,
+                    "-v",
+                    "error",
+                    "-show_entries",
+                    "format=duration",
+                    "-of",
+                    "json",
+                    filename,
+                ],
                 check=True,
             )
             return float(json.loads(result.stdout)["format"]["duration"])
@@ -63,7 +76,21 @@ class GetStats:
     def file_time(self, i):
         if i.count(".temp") != 0:
             return
-        if not i.endswith((".mp4", ".mov", ".mkv", ".webm", ".avi", ".mpeg", ".mp3", ".opus", ".m4a", ".aac", ".wav")):
+        if not i.endswith(
+            (
+                ".mp4",
+                ".mov",
+                ".mkv",
+                ".webm",
+                ".avi",
+                ".mpeg",
+                ".mp3",
+                ".opus",
+                ".m4a",
+                ".aac",
+                ".wav",
+            )
+        ):
             return
         t = self.get_length(os.path.join(self.pathname, i))
         if t is None:
@@ -77,7 +104,7 @@ class GetStats:
         tlis: list[str] = os.listdir(self.pathname)
         self.write("Gathered folder contents.")
         self.totTime = 0
-        self._ffprobe = find_ffprobe()
+        self._ffprobe = find_ffprobe(self.ffmpeg_custom)
         if self._ffprobe is None:
             self.write("ffprobe not found; duration scan unavailable", importance=1)
         self.write("<Video name>: <seconds>\n\n--------------------", 1)
@@ -92,5 +119,7 @@ class GetStats:
         seconds = self.totTime % 60
         minutes = int((self.totTime / 60) % 60)
         hours = int(self.totTime / 3600)
-        self.write(f"Total video time: {hours}h:{minutes}m:{seconds}s\n\n", importance=1)
+        self.write(
+            f"Total video time: {hours}h:{minutes}m:{seconds}s\n\n", importance=1
+        )
         return {"hours": hours, "minutes": minutes, "seconds": seconds}

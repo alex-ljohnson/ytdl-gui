@@ -1,8 +1,15 @@
 """Entry point to compiled program"""
 
 import argparse
+import os
 import sys
 from tkinter import messagebox
+
+# windowed builds have no console streams
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")
 
 from modules import application
 
@@ -29,7 +36,10 @@ if __name__ == "__main__":
             version="%(prog)s v" + application.APP_VERSION,
         )
         parser.add_argument(
-            "path", nargs="?", help="path to a .ytdl file containing a list of URLs for the editor", default=None
+            "path",
+            nargs="?",
+            help="path to a .ytdl file containing a list of URLs for the editor",
+            default=None,
         )
         args = parser.parse_args()
         application.main(args)

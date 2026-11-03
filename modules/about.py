@@ -3,7 +3,8 @@ from tkinter import Misc, Text, Toplevel, font, ttk
 from tkinter.constants import BOTH, DISABLED, GROOVE, INSERT, LEFT, NW, RIGHT, TOP, W, Y
 from typing import TYPE_CHECKING
 
-from modules.utils import _bundled_ffmpeg_dir, link, relative_path
+from modules.tools import _bundled_ffmpeg_dir
+from modules.utils import link, relative_path
 
 if TYPE_CHECKING:
     from modules.application import Application
@@ -92,17 +93,6 @@ class AboutWindow(Toplevel):
             ff_lic_txt.config(yscrollcommand=ff_lic_y.set)
             ff_lic_txt.pack(side=LEFT, fill=BOTH, expand=True)
             self.about_note.add(ffmpeg_frm, text="FFmpeg License")
-
-        atomic_frm = ttk.Frame(self)
-        at_lic_txt = Text(atomic_frm)
-        with open(relative_path("AtomicParsleyWindows\\COPYING.txt"), "r", encoding="utf-8") as f:
-            at_lic_txt.insert(INSERT, "".join(f.readlines()))
-        at_lic_txt.config(state=DISABLED)
-        at_lic_y = ttk.Scrollbar(atomic_frm, command=at_lic_txt.yview)
-        at_lic_y.pack(side=RIGHT, fill=Y, expand=True)
-        at_lic_txt.config(yscrollcommand=at_lic_y.set)
-        at_lic_txt.pack(side=LEFT, fill=BOTH, expand=True)
-        self.about_note.add(atomic_frm, text="Atomic Parsley License")
 
         awtheme_frm = ttk.Frame(self)
         aw_lic_txt = Text(awtheme_frm)

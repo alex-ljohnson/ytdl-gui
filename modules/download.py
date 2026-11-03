@@ -15,10 +15,9 @@ from modules.constants import (
 )
 from modules.extension import DownloadExtension, ExtensionManager, PlatformExtension
 from modules.out_win import OutputWindow
+from modules.tools import find_ffmpeg_dir, find_js_runtime
 from modules.utils import (
     disable_insert,
-    find_ffmpeg_dir,
-    find_js_runtime,
     log_debug,
     relative_data,
     relative_path,
@@ -54,12 +53,12 @@ class Downloader:
             log_debug("Created yt win")
 
     def get_ffmpeg(self) -> str | None:
-        """Return ffmpeg_location for yt-dlp (None means use system PATH)."""
-        return find_ffmpeg_dir()
+        """Return ffmpeg_location for yt-dlp (None means no ffmpeg found)."""
+        return find_ffmpeg_dir(self.master.app_config["tools"]["ffmpeg"])
 
     def get_js_runtime(self) -> str | None:
         """Return js_runtimes specifier for yt-dlp (None means no runtime found)."""
-        return find_js_runtime()
+        return find_js_runtime(self.master.app_config["tools"]["js_runtime"])
 
     def format_select(self, ctx: dict[str, list[dict]]):
         """Select the best video and the best audio that won't result in an mkv."""

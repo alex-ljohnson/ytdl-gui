@@ -1,4 +1,5 @@
 """Tests for pure logic in modules/download.py."""
+
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -8,16 +9,20 @@ from modules.download import Downloader
 from modules.extension import ExtensionManager, PlatformExtension
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _opts(**overrides):
     base = {
-        "video_format": "mp4", "audio_format": "m4a", "resolution": 1080,
-        "audio": False, "strict_format": False, "format_string": "",
-        "output_template": "", "audio_post": False, "metadata": False,
-        "thumbnail": False, "subtitles": False, "description": False,
+        "video_format": "mp4",
+        "audio_format": "m4a",
+        "resolution": 1080,
+        "audio": False,
+        "strict_format": False,
+        "format_string": "",
+        "output_template": "",
+        "audio_post": False,
+        "metadata": False,
+        "thumbnail": False,
+        "subtitles": False,
+        "description": False,
     }
     base.update(overrides)
     return base
@@ -51,7 +56,10 @@ def _reset_extension_manager():
 @pytest.fixture
 def downloader():
     master = MagicMock()
-    master.app_config = {"prefs": {"verbosity": False}}
+    master.app_config = {
+        "prefs": {"verbosity": False},
+        "tools": {"ffmpeg": "", "js_runtime": ""},
+    }
     d = Downloader({}, "C:/tmp", master)
     d.download_window = MagicMock()
     return d
@@ -78,14 +86,23 @@ def test_apply_extensions_tolerates_none_from_extension(downloader):
     assert result == ["ok"]
 
 
-def test_get_js_runtime_delegates_to_find_js_runtime(downloader, monkeypatch):
-    monkeypatch.setattr("modules.download.find_js_runtime", lambda: "deno")
-    assert downloader.get_js_runtime() == "deno"
+def test_get_js_runtime_passes_custom_path(downloader, monkeypatch):
+    downloader.master.app_config["tools"]["js_runtime"] = "/opt/deno"
+    monkeypatch.setattr(
+        "modules.download.find_js_runtime", lambda custom: f"deno:{custom}"
+    )
+    assert downloader.get_js_runtime() == "deno:/opt/deno"
 
 
 def test_get_js_runtime_returns_none_when_no_runtime(downloader, monkeypatch):
-    monkeypatch.setattr("modules.download.find_js_runtime", lambda: None)
+    monkeypatch.setattr("modules.download.find_js_runtime", lambda custom: None)
     assert downloader.get_js_runtime() is None
+
+
+def test_get_ffmpeg_passes_custom_path(downloader, monkeypatch):
+    downloader.master.app_config["tools"]["ffmpeg"] = "/opt/ffmpeg"
+    monkeypatch.setattr("modules.download.find_ffmpeg_dir", lambda custom: custom)
+    assert downloader.get_ffmpeg() == "/opt/ffmpeg"
 
 
 def test_download_includes_js_runtimes_when_runtime_found(monkeypatch, tmp_path):
@@ -94,6 +111,7 @@ def test_download_includes_js_runtimes_when_runtime_found(monkeypatch, tmp_path)
     class FakeYtdl:
         def __init__(self, opts):
             captured_opts.update(opts)
+
         def download(self, items):
             pass
 
@@ -104,10 +122,18 @@ def test_download_includes_js_runtimes_when_runtime_found(monkeypatch, tmp_path)
     master.app_config = {"prefs": {"verbosity": False, "disable_stats": True}}
 
     download_options = {
-        "video_format": "mp4", "audio_format": "m4a", "resolution": 1080,
-        "audio": False, "strict_format": False, "format_string": "",
-        "output_template": "", "audio_post": False, "metadata": False,
-        "thumbnail": False, "subtitles": False, "description": False,
+        "video_format": "mp4",
+        "audio_format": "m4a",
+        "resolution": 1080,
+        "audio": False,
+        "strict_format": False,
+        "format_string": "",
+        "output_template": "",
+        "audio_post": False,
+        "metadata": False,
+        "thumbnail": False,
+        "subtitles": False,
+        "description": False,
     }
 
     d = Downloader(download_options, "C:/tmp", master)
@@ -115,8 +141,12 @@ def test_download_includes_js_runtimes_when_runtime_found(monkeypatch, tmp_path)
 
     monkeypatch.setattr("modules.download.YoutubeDL", FakeYtdl)
     monkeypatch.setattr("modules.download.relative_data", lambda p, **kw: str(archive))
-    monkeypatch.setattr("modules.download.relative_path", lambda p, *a, **kw: str(tmp_path / "cookies.txt"))
+    monkeypatch.setattr(
+        "modules.download.relative_path",
+        lambda p, *a, **kw: str(tmp_path / "cookies.txt"),
+    )
     monkeypatch.setattr(d, "get_js_runtime", lambda: "deno")
+    monkeypatch.setattr(d, "get_ffmpeg", lambda: None)
     monkeypatch.setattr(d, "apply_extensions", lambda lines: lines)
 
     d.download(["https://youtu.be/test"], parallel=False, print_log=True)
@@ -129,6 +159,7 @@ def test_download_omits_js_runtimes_when_no_runtime(monkeypatch, tmp_path):
     class FakeYtdl:
         def __init__(self, opts):
             captured_opts.update(opts)
+
         def download(self, items):
             pass
 
@@ -139,10 +170,18 @@ def test_download_omits_js_runtimes_when_no_runtime(monkeypatch, tmp_path):
     master.app_config = {"prefs": {"verbosity": False, "disable_stats": True}}
 
     download_options = {
-        "video_format": "mp4", "audio_format": "m4a", "resolution": 1080,
-        "audio": False, "strict_format": False, "format_string": "",
-        "output_template": "", "audio_post": False, "metadata": False,
-        "thumbnail": False, "subtitles": False, "description": False,
+        "video_format": "mp4",
+        "audio_format": "m4a",
+        "resolution": 1080,
+        "audio": False,
+        "strict_format": False,
+        "format_string": "",
+        "output_template": "",
+        "audio_post": False,
+        "metadata": False,
+        "thumbnail": False,
+        "subtitles": False,
+        "description": False,
     }
 
     d = Downloader(download_options, "C:/tmp", master)
@@ -150,8 +189,12 @@ def test_download_omits_js_runtimes_when_no_runtime(monkeypatch, tmp_path):
 
     monkeypatch.setattr("modules.download.YoutubeDL", FakeYtdl)
     monkeypatch.setattr("modules.download.relative_data", lambda p, **kw: str(archive))
-    monkeypatch.setattr("modules.download.relative_path", lambda p, *a, **kw: str(tmp_path / "cookies.txt"))
+    monkeypatch.setattr(
+        "modules.download.relative_path",
+        lambda p, *a, **kw: str(tmp_path / "cookies.txt"),
+    )
     monkeypatch.setattr(d, "get_js_runtime", lambda: None)
+    monkeypatch.setattr(d, "get_ffmpeg", lambda: None)
     monkeypatch.setattr(d, "apply_extensions", lambda lines: lines)
 
     d.download(["https://youtu.be/test"], parallel=False, print_log=True)
@@ -162,6 +205,7 @@ def test_download_omits_js_runtimes_when_no_runtime(monkeypatch, tmp_path):
 # Shared fixture for opts-construction tests
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def dl_capture(monkeypatch, tmp_path):
     """Yields (make_downloader, captured_opts) for yt-dlp opts construction tests."""
@@ -170,6 +214,7 @@ def dl_capture(monkeypatch, tmp_path):
     class _FakeYtdl:
         def __init__(self, opts):
             captured.update(opts)
+
         def download(self, items):
             pass
 
@@ -177,14 +222,22 @@ def dl_capture(monkeypatch, tmp_path):
     archive.touch()
     monkeypatch.setattr("modules.download.YoutubeDL", _FakeYtdl)
     monkeypatch.setattr("modules.download.relative_data", lambda p, **kw: str(archive))
-    monkeypatch.setattr("modules.download.relative_path", lambda p, *a, **kw: str(tmp_path / "cookies.txt"))
+    monkeypatch.setattr(
+        "modules.download.relative_path",
+        lambda p, *a, **kw: str(tmp_path / "cookies.txt"),
+    )
 
-    def make_downloader(opts, *, js_runtime="deno", disable_stats=True, verbosity=False):
+    def make_downloader(
+        opts, *, js_runtime="deno", disable_stats=True, verbosity=False
+    ):
         master = MagicMock()
-        master.app_config = {"prefs": {"verbosity": verbosity, "disable_stats": disable_stats}}
+        master.app_config = {
+            "prefs": {"verbosity": verbosity, "disable_stats": disable_stats}
+        }
         d = Downloader(opts, "C:/tmp", master)
         d.download_window = None
         monkeypatch.setattr(d, "get_js_runtime", lambda: js_runtime)
+        monkeypatch.setattr(d, "get_ffmpeg", lambda: None)
         monkeypatch.setattr(d, "apply_extensions", lambda lines: lines)
         return d
 
@@ -194,10 +247,6 @@ def dl_capture(monkeypatch, tmp_path):
 _RUN = ["https://youtu.be/test"]
 
 
-# ---------------------------------------------------------------------------
-# js_runtimes — bundled QuickJS (the bug that prompted this test class)
-# ---------------------------------------------------------------------------
-
 def test_download_js_runtimes_bundled_quickjs(dl_capture):
     make, captured = dl_capture
     d = make(_opts(), js_runtime="quickjs:/fake/qjs.exe")
@@ -205,15 +254,13 @@ def test_download_js_runtimes_bundled_quickjs(dl_capture):
     assert captured["js_runtimes"] == {"quickjs": {"path": "/fake/qjs.exe"}}
 
 
-# ---------------------------------------------------------------------------
-# Postprocessors
-# ---------------------------------------------------------------------------
-
 def test_download_postprocessor_audio_post(dl_capture):
     make, captured = dl_capture
     d = make(_opts(audio_post=True, audio_format="mp3"))
     d.download(_RUN, parallel=False, print_log=True)
-    assert {"key": "FFmpegExtractAudio", "preferredcodec": "mp3"} in captured["postprocessors"]
+    assert {"key": "FFmpegExtractAudio", "preferredcodec": "mp3"} in captured[
+        "postprocessors"
+    ]
 
 
 def test_download_postprocessor_metadata(dl_capture):
@@ -234,7 +281,9 @@ def test_download_postprocessor_thumbnail_embedded_for_mp4(dl_capture):
     make, captured = dl_capture
     d = make(_opts(thumbnail=True, video_format="mp4"))
     d.download(_RUN, parallel=False, print_log=True)
-    assert {"key": "EmbedThumbnail", "already_have_thumbnail": False} in captured["postprocessors"]
+    assert {"key": "EmbedThumbnail", "already_have_thumbnail": False} in captured[
+        "postprocessors"
+    ]
 
 
 def test_download_postprocessor_thumbnail_not_embedded_for_webm(dl_capture):
@@ -244,10 +293,6 @@ def test_download_postprocessor_thumbnail_not_embedded_for_webm(dl_capture):
     keys = [p["key"] for p in captured["postprocessors"]]
     assert "EmbedThumbnail" not in keys
 
-
-# ---------------------------------------------------------------------------
-# Format / template overrides
-# ---------------------------------------------------------------------------
 
 def test_download_opts_custom_format_string_overrides_format_select(dl_capture):
     make, captured = dl_capture
@@ -262,10 +307,6 @@ def test_download_opts_custom_output_template(dl_capture):
     d.download(_RUN, parallel=False, print_log=True)
     assert captured["outtmpl"] == "%(title)s.%(ext)s"
 
-
-# ---------------------------------------------------------------------------
-# Progress hooks and verbosity
-# ---------------------------------------------------------------------------
 
 def test_download_opts_progress_hook_added_when_stats_enabled(dl_capture):
     make, captured = dl_capture

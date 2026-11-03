@@ -6,6 +6,7 @@ from scripts.sync_versions import (
     to_file_version,
     update_grab_version,
     update_iss,
+    update_pyproject,
     read_app_version,
 )
 
@@ -72,6 +73,15 @@ def test_update_iss(tmp_path):
     content = iss.read_text()
     assert '#define MyAppVersion "2026.04.22.f2"' in content
     assert '#define MyNumericVersion "2026.04.22.2"' in content
+
+
+def test_update_pyproject(tmp_path):
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text('[project]\nname = "x"\nversion = "2026.01.01.1"\n\n[tool.other]\nversion = "keep"\n')
+    update_pyproject("2026.04.22.f2", pyproject)
+    content = pyproject.read_text()
+    assert 'version = "2026.04.22.2"' in content
+    assert 'version = "keep"' in content
 
 
 def test_read_app_version(tmp_path):

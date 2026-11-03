@@ -1,4 +1,4 @@
-"""Propagate APP_VERSION from modules/application.py to GrabVersion.py and YTDLGUISetupScript.iss."""
+"""Propagate APP_VERSION from modules/application.py to GrabVersion.py, YTDLGUISetupScript.iss and pyproject.toml."""
 
 import re
 from pathlib import Path
@@ -86,6 +86,8 @@ def update_pyproject(version: str, path: Path = UV_PROJECT_FILE) -> None:
         r'(^version\s*=\s*")[^"]+(")',
         lambda m: f"{m.group(1)}{numeric}{m.group(2)}",
         text,
+        count=1,
+        flags=re.MULTILINE,
     )
     path.write_text(text, encoding="utf-8")
 
@@ -98,6 +100,8 @@ def main() -> None:
     print("  Updated GrabVersion.py")
     update_iss(version)
     print("  Updated YTDLGUISetupScript.iss")
+    update_pyproject(version)
+    print("  Updated pyproject.toml")
 
 
 if __name__ == "__main__":

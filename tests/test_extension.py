@@ -1,19 +1,21 @@
 """Tests for extension base classes and Downloader.apply_extensions."""
-import pytest
+
 from unittest.mock import MagicMock
 
+import pytest
+
+from modules.download import Downloader
 from modules.extension import (
     DownloadExtension,
     Extension,
     ExtensionManager,
     PlatformExtension,
 )
-from modules.download import Downloader
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def _reset_extension_manager():
@@ -34,15 +36,31 @@ def _make_downloader():
 # Extension base class
 # ---------------------------------------------------------------------------
 
+
 def test_extension_default_name_is_class_name():
     class MyPlugin(Extension):
         pass
+
     assert MyPlugin().get_name() == "MyPlugin"
 
 
 def test_extension_custom_name():
     ext = Extension(name="Spotify")
     assert ext.get_name() == "Spotify"
+
+
+def test_extension_class_level_name_is_kept():
+    class MyPlugin(Extension):
+        _name = "My plugin"
+
+    assert MyPlugin().get_name() == "My plugin"
+
+
+def test_extension_init_name_overrides_class_level_name():
+    class MyPlugin(Extension):
+        _name = "My plugin"
+
+    assert MyPlugin(name="Other").get_name() == "Other"
 
 
 def test_extension_initially_not_ready():
@@ -66,6 +84,7 @@ def test_extension_disable_clears_ready():
 # PlatformExtension
 # ---------------------------------------------------------------------------
 
+
 def test_platform_extension_check_type_empty_string():
     assert not PlatformExtension().check_type("")
 
@@ -82,6 +101,7 @@ def test_platform_extension_get_items_passthrough():
 # ---------------------------------------------------------------------------
 # DownloadExtension
 # ---------------------------------------------------------------------------
+
 
 def test_download_extension_initially_not_running():
     assert not DownloadExtension().is_running()
@@ -111,10 +131,13 @@ def test_download_extension_starting_returns_items_unchanged():
 # Downloader.apply_extensions
 # ---------------------------------------------------------------------------
 
+
 def test_apply_extensions_no_manager_returns_filtered_lines():
     ExtensionManager.instance = None
     d = _make_downloader()
-    result = d.apply_extensions(["https://example.com", "# comment", "  ", "https://other.com"])
+    result = d.apply_extensions(
+        ["https://example.com", "# comment", "  ", "https://other.com"]
+    )
     assert result == ["https://example.com", "https://other.com"]
 
 

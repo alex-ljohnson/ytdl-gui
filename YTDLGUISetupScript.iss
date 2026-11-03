@@ -67,12 +67,18 @@ Name: "quickjs"; Description: "QuickJS runtime (JavaScript engine required for Y
 [Files]
 Source: ".\dist\DownloaderGUI\{#MyAppExeName}"; DestDir: "{app}"
 Source: ".\dist\DownloaderGUI\_internal\README.md"; DestDir: "{app}"; Flags: isreadme
-Source: ".\dist\DownloaderGUI\*"; DestDir: "{app}"; Check: FullInstall; Excludes: "{#MyAppExeName},ffmpeg-7.1-essentials_build\*,quickjs\*"
-Source: ".\dist\DownloaderGUI\_internal\*"; DestDir: "{app}\_internal"; Check: FullInstall; Flags: recursesubdirs createallsubdirs; Excludes: "{#MyAppExeName},ffmpeg-7.1-essentials_build\*,quickjs\*"
-Source: ".\dist\DownloaderGUI\_internal\ffmpeg-7.1-essentials_build\*"; DestDir: "{app}\_internal\ffmpeg-7.1-essentials_build"; Check: FullInstall; Components: ffmpeg; Flags: recursesubdirs createallsubdirs
-Source: ".\dist\DownloaderGUI\_internal\quickjs\*"; DestDir: "{app}\_internal\quickjs"; Check: FullInstall; Components: quickjs; Flags: recursesubdirs createallsubdirs
+Source: ".\dist\DownloaderGUI\*"; DestDir: "{app}"; Check: FullInstall; Excludes: "{#MyAppExeName},tools\ffmpeg\*,tools\quickjs\*"
+Source: ".\dist\DownloaderGUI\_internal\*"; DestDir: "{app}\_internal"; Check: FullInstall; Flags: recursesubdirs createallsubdirs; Excludes: "{#MyAppExeName},tools\ffmpeg\*,tools\quickjs\*"
+Source: ".\dist\DownloaderGUI\_internal\tools\ffmpeg\*"; DestDir: "{app}\_internal\tools\ffmpeg"; Check: FullInstall; Components: ffmpeg; Flags: recursesubdirs createallsubdirs
+Source: ".\dist\DownloaderGUI\_internal\tools\quickjs\*"; DestDir: "{app}\_internal\tools\quickjs"; Check: FullInstall; Components: quickjs; Flags: recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 ; Full Install only used in updater func, if dependencies haven't changed, to install the exe only.
+
+[InstallDelete]
+; layout before bundled tools moved under _internal\tools
+Type: filesandordirs; Name: "{app}\_internal\ffmpeg-7.1-essentials_build"
+Type: filesandordirs; Name: "{app}\_internal\quickjs"
+Type: filesandordirs; Name: "{app}\_internal\AtomicParsleyWindows"
 
 [Registry]
 Root: HKA; Subkey: "Software\Classes\{#MyAppAssocExt}\OpenWithProgids"; ValueType: string; ValueName: "{#MyAppAssocKey}"; ValueData: ""; Flags: uninsdeletevalue

@@ -20,7 +20,8 @@ class Extension:
     # _REQUIRED_PACKAGES: set[str] = set()
 
     def __init__(self, name: str | None = None):
-        self._name = name
+        if name is not None:
+            self._name = name
         self.ready = False
 
     def get_name(self):
@@ -87,14 +88,14 @@ class ExtensionManager:
     def __new__(cls, *args):
         if cls.instance is None:
             log_debug("Creating extension singleton")
-            cls.instance = super(ExtensionManager, cls).__new__(cls)
+            cls.instance = super().__new__(cls)
             cls.instance._initialised = False
         return cls.instance
 
     def __init__(self, master) -> None:
         if getattr(self, "_initialised", False):
             return
-        self.master: "Application" = master
+        self.master: Application = master
         self.extensions = {}
         self.load_extensions()
         self._initialised = True
@@ -104,16 +105,22 @@ class ExtensionManager:
 
     def load_extensions(self):
         discovered_extensions = {
-            name: importlib.import_module(name) for finder, name, ispkg in self.iter_namespace(modules.extensions)
+            name: importlib.import_module(name)
+            for finder, name, ispkg in self.iter_namespace(modules.extensions)
         }
         for module in discovered_extensions.values():
             for attr in [getattr(module, x) for x in dir(module)]:
                 if isinstance(attr, type):
-                    if issubclass(attr, Extension) and attr not in (Extension, PlatformExtension):
+                    if issubclass(attr, Extension) and attr not in (
+                        Extension,
+                        PlatformExtension,
+                    ):
                         try:
                             self.extensions[attr.__name__] = attr()
                         except Exception as ex:  # pylint: disable=W0718
-                            messagebox.showerror("Module not loaded", f"A module could not load.\n{ex}")
+                            messagebox.showerror(
+                                "Module not loaded", f"A module could not load.\n{ex}"
+                            )
 
     def register(self, cls: type[Extension]):
         new_ext = cls()
@@ -123,7 +130,9 @@ class ExtensionManager:
 class ExtensionWindow(Toplevel):
     """Provides a window for managing extensions"""
 
-    def __init__(self, master: Misc | None = None, *, background: str | None = None) -> None:
+    def __init__(
+        self, master: Misc | None = None, *, background: str | None = None
+    ) -> None:
         super().__init__(master, background=background)  # type: ignore
 
         self.master: Application  # type: ignore
@@ -131,7 +140,9 @@ class ExtensionWindow(Toplevel):
         self.iconbitmap(relative_path("Resources\\YTDLv2_256.ico"))
         self.protocol("WM_DELETE_WINDOW", self.win_close)
         self.grab_set()
-        ttk.Label(self, text="Use checkboxes below to enable or disable extensions loaded.").grid(column=0, row=0)
+        ttk.Label(
+            self, text="Use checkboxes below to enable or disable extensions loaded."
+        ).grid(column=0, row=0)
         count = 0
         for ext in ExtensionManager(self.master).extensions.values():
             ext: Extension
@@ -148,10 +159,14 @@ class ExtensionWindow(Toplevel):
     def toggle_ext(self, extension: Extension):
         try:
             if extension.ready:
-                self.master.app_config["enabled_extensions"].remove(extension.__class__.__name__)
+                self.master.app_config["enabled_extensions"].remove(
+                    extension.__class__.__name__
+                )
                 extension.disable()
             else:
-                self.master.app_config["enabled_extensions"].append(extension.__class__.__name__)
+                self.master.app_config["enabled_extensions"].append(
+                    extension.__class__.__name__
+                )
                 extension.enable()
         except Exception as ex:  # pylint: disable=W0718
             messagebox.showerror("Module error", f"Module could not load.\n{ex}")
